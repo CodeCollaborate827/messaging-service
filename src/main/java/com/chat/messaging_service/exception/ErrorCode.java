@@ -1,4 +1,4 @@
-package com.chat.user_service.exception;
+package com.chat.messaging_service.exception;
 
 public enum ErrorCode {
 
