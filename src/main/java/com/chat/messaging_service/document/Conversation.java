@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +36,12 @@ public class Conversation {
   private long currentMessageNo;
 
   @Field("seen_tracker")
-  private Map<String, Long> seenTracker;
+  private SeenStatusTracker seenStatusTracker;
+
   @Field("created_at")
   private OffsetDateTime createdAt;
+
+
   @Data
   public class ConverationPreview {
     @Field("last_message_content")
@@ -46,5 +50,14 @@ public class Conversation {
     private OffsetDateTime lastMessageTime;
     @Field("last_message_sender")
     private String lastMessageSender;
+  }
+
+  @Data
+  public class SeenStatusTracker {
+    private Map<String, Long> map;
+
+    public SeenStatusTracker() {
+      this.map = new HashMap<>();
+    }
   }
 }

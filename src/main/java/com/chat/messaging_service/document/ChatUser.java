@@ -5,6 +5,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.List;
+
 @Document(collection = "chat_user")
 @Data
 public class ChatUser {
@@ -15,4 +17,5 @@ public class ChatUser {
   @Field("display_name")
   private String displayName;
   private String avatar;
+  private List<String> conversationIds;
 }

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: messaging
+    name: messaging-service
   data:
     mongodb:
       uri: mongodb://localhost:27017/messaging_service
@@ -12,3 +12,5 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+    instance:
+      preferIpAddress: true
