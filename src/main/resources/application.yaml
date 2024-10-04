@@ -4,6 +4,16 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/messaging_service
+  cloud:
+    function:
+      definition: userRegistrationDownstreamConsumer
+    stream:
+      bindings:
+        userRegistrationDownstreamConsumer-in-0:
+          destination: topic.user.registration
+      kafka:
+        binder:
+          brokers: localhost:9092
 
 server:
   port: 8083
