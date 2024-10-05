@@ -1,29 +1,36 @@
 package com.chat.messaging_service.document;
 
-import com.chat.messaging_service.document.ChatUser;
+import com.chat.messaging_service.document.objects.ConversationMember;
+import com.chat.messaging_service.document.objects.ConversationPreview;
+import com.chat.messaging_service.document.objects.SeenStatusTracker;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Document(collection = "conversation")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Conversation {
   @Id
   private String id;
-  private List<String> members;
-  private ConverationPreview preview;
+  //TODO: this should be something relational
+  private List<ConversationMember> members;
+  @Field("conversation_preview")
+  private ConversationPreview conversationPreview;
 
 
-
-  @Transient
-  private OffsetDateTime updatedAt; // the updated time is calculated based on the last message time
+  @Field("updated_at")
+  @Builder.Default
+  private OffsetDateTime updatedAt = OffsetDateTime.now(); // the updated time is calculated based on the last message time
 
   @Field("is_group_conversation")
   private boolean isGroupConversation;
@@ -36,28 +43,11 @@ public class Conversation {
   private long currentMessageNo;
 
   @Field("seen_tracker")
-  private SeenStatusTracker seenStatusTracker;
+  @Builder.Default
+  private SeenStatusTracker seenStatusTracker = new SeenStatusTracker();
 
   @Field("created_at")
-  private OffsetDateTime createdAt;
+  @Builder.Default
+  private OffsetDateTime createdAt = OffsetDateTime.now();
 
-
-  @Data
-  public class ConverationPreview {
-    @Field("last_message_content")
-    private String lastMessageContent;
-    @Field("last_message_time")
-    private OffsetDateTime lastMessageTime;
-    @Field("last_message_sender")
-    private String lastMessageSender;
-  }
-
-  @Data
-  public class SeenStatusTracker {
-    private Map<String, Long> map;
-
-    public SeenStatusTracker() {
-      this.map = new HashMap<>();
-    }
-  }
 }

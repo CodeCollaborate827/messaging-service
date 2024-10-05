@@ -5,7 +5,11 @@ public enum ErrorCode {
   GATEWAY_1("Token is invalid", 400),
   KAFKA_MESSAGE_PARSING("Error when parsing kafka message", 500),
   MESSAGING_ERROR1("User already exists", 400),
-  MESSAGING_ERROR2("User not found", 404);
+  MESSAGING_ERROR2("User not found", 404),
+  MESSAGING_ERROR3("Invalid argument, direct conversation", 500);
+
+
+
   private final String errorMessage;
   private final int httpStatus;
 

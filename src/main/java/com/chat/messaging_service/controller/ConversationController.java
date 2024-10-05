@@ -60,7 +60,7 @@ public class ConversationController {
       log.info("requestId :{}", requestId);
 
 
-      return conversationService.createNewGroupConversations();
+      return conversationService.createNewGroupConversations(createConversationRequest, userId, requestId);
   }
 
 

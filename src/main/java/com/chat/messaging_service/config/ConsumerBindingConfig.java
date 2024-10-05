@@ -32,12 +32,13 @@ public class ConsumerBindingConfig {
     @Bean
     public Consumer<Flux<Message<Event>>> userRegistrationDownstreamConsumer() {
         return flux -> flux.flatMap(event -> processMessage(event.getPayload()))
-                .onErrorResume(this::handleError)
+                .onErrorContinue((e, object) -> log.error(e.getMessage())) //TODO: log the error
+//                .onErrorResume(this::handleError)
                 .subscribe();
     }
 
     private Mono<ChatUser> processMessage(Event event) {
-        log.info("Processing the message");
+        log.info("Processing the message: {}", event);
 
         // increment 1.... kakfa messg counter
         String payloadBase64 = event.getPayloadBase64();
