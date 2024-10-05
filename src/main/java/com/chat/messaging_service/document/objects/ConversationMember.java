@@ -11,8 +11,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class ConversationMember {
-    private String id;
-    @JsonProperty("display_name")
-    private String displayName;
-    private String avatar;
+  private String id;
+
+  @JsonProperty("display_name")
+  private String displayName;
+
+  private String avatar;
 }

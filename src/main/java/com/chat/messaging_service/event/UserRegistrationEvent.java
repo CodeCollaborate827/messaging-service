@@ -1,11 +1,10 @@
 package com.chat.messaging_service.event;
 
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.OffsetDateTime;
 
 @Data
 @NoArgsConstructor

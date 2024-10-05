@@ -20,11 +20,11 @@ public class ConversationController {
   private final ConversationService conversationService;
 
   @GetMapping("/conversations")
-  public Mono<ResponseEntity<CommonResponse>> getConversations(@RequestHeader String userId,
-                                                               @RequestHeader String requestId,
-                                                               @RequestParam(required = false, defaultValue = "10") Integer pageSize,
-                                                               @RequestParam(required = false, defaultValue = "1") Integer currentPage
-                                                               ) {
+  public Mono<ResponseEntity<CommonResponse>> getConversations(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+      @RequestParam(required = false, defaultValue = "1") Integer currentPage) {
 
     log.info("userId :{}", userId);
     log.info("requestId :{}", requestId);
@@ -32,45 +32,42 @@ public class ConversationController {
     log.info("currentPage :{}", currentPage);
 
     return conversationService.getAllConversationsOfUser(userId, requestId);
-
   }
 
   @GetMapping("/conversations/{conversationId}")
-  public Mono<ResponseEntity<CommonResponse>> getConversationDetails(@RequestHeader String userId,
-                                                                     @RequestHeader String requestId
-                                                                     ) {
+  public Mono<ResponseEntity<CommonResponse>> getConversationDetails(
+      @RequestHeader String userId, @RequestHeader String requestId) {
 
-    CommonResponse data = CommonResponse.builder()
+    CommonResponse data =
+        CommonResponse.builder()
             .message("Everything is good, please check the log")
             .requestId(requestId)
             .data(null)
             .build();
 
-
     return Mono.just(ResponseEntity.ok(data));
   }
 
-
   @PostMapping("/create-group-conversation")
-  public Mono<ResponseEntity<CommonResponse>> createConversation(@RequestHeader String userId,
-                                                                 @RequestHeader String requestId,
-                                                                 @RequestBody CreateGroupConversationRequest createConversationRequest
-                                                                 ) {
-      log.info("userId :{}", userId);
-      log.info("requestId :{}", requestId);
+  public Mono<ResponseEntity<CommonResponse>> createConversation(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @RequestBody CreateGroupConversationRequest createConversationRequest) {
+    log.info("userId :{}", userId);
+    log.info("requestId :{}", requestId);
 
-
-      return conversationService.createNewGroupConversations(createConversationRequest, userId, requestId);
+    return conversationService.createNewGroupConversations(
+        createConversationRequest, userId, requestId);
   }
 
-
   @PutMapping("/conversations/{conversationId}")
-  public Mono<ResponseEntity<CommonResponse>> updateConversation(@RequestHeader String userId,
-                                                                 @RequestHeader String requestId,
-                                                                 @PathVariable String conversationId,
-                                                                 @RequestBody UpdateConversationRequest updateConversationRequest
-                                                                 ) {
-    CommonResponse data = CommonResponse.builder()
+  public Mono<ResponseEntity<CommonResponse>> updateConversation(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @PathVariable String conversationId,
+      @RequestBody UpdateConversationRequest updateConversationRequest) {
+    CommonResponse data =
+        CommonResponse.builder()
             .message("Everything is good, please check the log")
             .requestId(requestId)
             .data(null)
@@ -80,37 +77,39 @@ public class ConversationController {
   }
 
   @PutMapping("/conversations/{conversationId}/add-member")
-  public Mono<ResponseEntity<CommonResponse>> addMemberToConversation(@RequestHeader String userId,
-                                                                      @RequestHeader String requestId,
-                                                                      @PathVariable String conversationId,
-                                                                      @RequestBody AddConversationMemberRequest addConversationMemberRequest
-                                                                      ) {
-      CommonResponse data = CommonResponse.builder()
-              .message("Everything is good, please check the log")
-              .requestId(requestId)
-              .data(null)
-              .build();
+  public Mono<ResponseEntity<CommonResponse>> addMemberToConversation(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @PathVariable String conversationId,
+      @RequestBody AddConversationMemberRequest addConversationMemberRequest) {
+    CommonResponse data =
+        CommonResponse.builder()
+            .message("Everything is good, please check the log")
+            .requestId(requestId)
+            .data(null)
+            .build();
 
-      return Mono.just(ResponseEntity.ok(data));
+    return Mono.just(ResponseEntity.ok(data));
   }
 
   @GetMapping("/conversations/{conversationId}/messages")
-    public Mono<ResponseEntity<CommonResponse>> getConversationMessages(@RequestHeader String userId,
-                                                                        @RequestHeader String requestId,
-                                                                        @PathVariable String conversationId,
-                                                                        @RequestParam(required = false) Integer fromMessageNo,
-                                                                        @RequestParam(required = false) Integer toMessageNo,
-                                                                        @RequestParam(required = false) Integer lastMessages
-                                                                        ) {
+  public Mono<ResponseEntity<CommonResponse>> getConversationMessages(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @PathVariable String conversationId,
+      @RequestParam(required = false) Integer fromMessageNo,
+      @RequestParam(required = false) Integer toMessageNo,
+      @RequestParam(required = false) Integer lastMessages) {
 
-        log.info("userId :{}", userId);
-        log.info("requestId :{}", requestId);
+    log.info("userId :{}", userId);
+    log.info("requestId :{}", requestId);
 
-        CommonResponse data = CommonResponse.builder()
-                .message("Everything is good, please check the log")
-                .requestId(requestId)
-                .data(null)
-                .build();
-        return Mono.just(ResponseEntity.ok(data));
-    }
+    CommonResponse data =
+        CommonResponse.builder()
+            .message("Everything is good, please check the log")
+            .requestId(requestId)
+            .data(null)
+            .build();
+    return Mono.just(ResponseEntity.ok(data));
+  }
 }

@@ -8,8 +8,8 @@ import reactor.core.publisher.Mono;
 
 @Service
 public interface ConversationService {
-    Mono<ResponseEntity<CommonResponse>> getAllConversationsOfUser(String userId, String requestId);
+  Mono<ResponseEntity<CommonResponse>> getAllConversationsOfUser(String userId, String requestId);
 
-    Mono<ResponseEntity<CommonResponse>> createNewGroupConversations(CreateGroupConversationRequest createConversationRequest, String userId, String requestId);
-
+  Mono<ResponseEntity<CommonResponse>> createNewGroupConversations(
+      CreateGroupConversationRequest createConversationRequest, String userId, String requestId);
 }

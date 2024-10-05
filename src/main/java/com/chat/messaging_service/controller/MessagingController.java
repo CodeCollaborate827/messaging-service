@@ -11,37 +11,35 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/messaging")
 public class MessagingController {
 
-    @PostMapping("/send-message")
-    public Mono<ResponseEntity<CommonResponse>> sendMessage(@RequestHeader String userId,
-                                                            @RequestHeader String requestId,
-                                                            @RequestBody SendMessageRequest sendMessageRequest
-                                                            ) {
+  @PostMapping("/send-message")
+  public Mono<ResponseEntity<CommonResponse>> sendMessage(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @RequestBody SendMessageRequest sendMessageRequest) {
 
-        CommonResponse data = CommonResponse.builder()
-                .message("Everything is good, please check the log")
-                .requestId(requestId)
-                .data(null)
-                .build();
+    CommonResponse data =
+        CommonResponse.builder()
+            .message("Everything is good, please check the log")
+            .requestId(requestId)
+            .data(null)
+            .build();
 
-        return Mono.just(ResponseEntity.ok(data));
+    return Mono.just(ResponseEntity.ok(data));
+  }
 
-    }
+  @PostMapping("/react-message")
+  public Mono<ResponseEntity<CommonResponse>> reactMessage(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @RequestBody ReactMessageRequest reactMessageRequest) {
 
+    CommonResponse data =
+        CommonResponse.builder()
+            .message("Everything is good, please check the log")
+            .requestId(requestId)
+            .data(null)
+            .build();
 
-
-    @PostMapping("/react-message")
-    public Mono<ResponseEntity<CommonResponse>> reactMessage(@RequestHeader String userId,
-                                                            @RequestHeader String requestId,
-                                                            @RequestBody ReactMessageRequest reactMessageRequest
-                                                            ) {
-
-        CommonResponse data = CommonResponse.builder()
-                .message("Everything is good, please check the log")
-                .requestId(requestId)
-                .data(null)
-                .build();
-
-        return Mono.just(ResponseEntity.ok(data));
-
-    }
+    return Mono.just(ResponseEntity.ok(data));
+  }
 }
