@@ -4,11 +4,7 @@ import com.chat.messaging_service.dto.request.ReactMessageRequest;
 import com.chat.messaging_service.dto.request.SendMessageRequest;
 import com.chat.messaging_service.dto.response.CommonResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -16,8 +12,8 @@ import reactor.core.publisher.Mono;
 public class MessagingController {
 
     @PostMapping("/send-message")
-    public Mono<ResponseEntity<CommonResponse>> sendMessage(@Header String userId,
-                                                            @Header String requestId,
+    public Mono<ResponseEntity<CommonResponse>> sendMessage(@RequestHeader String userId,
+                                                            @RequestHeader String requestId,
                                                             @RequestBody SendMessageRequest sendMessageRequest
                                                             ) {
 
@@ -34,8 +30,8 @@ public class MessagingController {
 
 
     @PostMapping("/react-message")
-    public Mono<ResponseEntity<CommonResponse>> reactMessage(@Header String userId,
-                                                            @Header String requestId,
+    public Mono<ResponseEntity<CommonResponse>> reactMessage(@RequestHeader String userId,
+                                                            @RequestHeader String requestId,
                                                             @RequestBody ReactMessageRequest reactMessageRequest
                                                             ) {
 
