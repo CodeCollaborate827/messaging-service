@@ -33,6 +33,7 @@ public class ConversationMessage {
   private String repliedMessageId;
 
   @Field private String content;
+  @Field private Long messageNo;
 
   @Field("created_at")
   @Builder.Default

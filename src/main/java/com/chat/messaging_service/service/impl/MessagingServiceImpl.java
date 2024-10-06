@@ -102,7 +102,6 @@ public class MessagingServiceImpl implements MessagingService {
                   // send kafka event for new message
                   .doOnNext(
                       savedConversation -> {
-                        log.info("SENDING KAFKA MESSAGE =====================");
                         kafkaProducerService.sendNewMessageEventToKafka(savedConversation, message);
                       })
                   .then(

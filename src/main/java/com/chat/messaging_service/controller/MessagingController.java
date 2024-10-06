@@ -42,13 +42,8 @@ public class MessagingController {
       @RequestHeader String requestId,
       @RequestBody ReactMessageRequest reactMessageRequest) {
 
-    CommonResponse data =
-        CommonResponse.builder()
-            .message("Everything is good, please check the log")
-            .requestId(requestId)
-            .data(null)
-            .build();
+    // TODO: implement this method
 
-    return Mono.just(ResponseEntity.ok(data));
+    return Mono.just(ResponseEntity.ok(null));
   }
 }

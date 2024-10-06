@@ -1,6 +1,5 @@
 package com.chat.messaging_service.controller;
 
-import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
 import com.chat.messaging_service.dto.request.CreateGroupConversationRequest;
 import com.chat.messaging_service.dto.request.UpdateConversationRequest;
@@ -70,14 +69,9 @@ public class ConversationController {
       @RequestHeader String requestId,
       @PathVariable String conversationId,
       @RequestBody UpdateConversationRequest updateConversationRequest) {
-    CommonResponse data =
-        CommonResponse.builder()
-            .message("Everything is good, please check the log")
-            .requestId(requestId)
-            .data(null)
-            .build();
 
-    return Mono.just(ResponseEntity.ok(data));
+    // TODO: implement this method
+    return Mono.just(ResponseEntity.ok(null));
   }
 
   @PutMapping("/conversations/{conversationId}/add-member")
@@ -86,14 +80,9 @@ public class ConversationController {
       @RequestHeader String requestId,
       @PathVariable String conversationId,
       @RequestBody AddConversationMemberRequest addConversationMemberRequest) {
-    CommonResponse data =
-        CommonResponse.builder()
-            .message("Everything is good, please check the log")
-            .requestId(requestId)
-            .data(null)
-            .build();
+    // TODO: implement this method
 
-    return Mono.just(ResponseEntity.ok(data));
+    return Mono.just(ResponseEntity.ok(null));
   }
 
   @GetMapping("/conversations/{conversationId}/messages")
@@ -108,17 +97,7 @@ public class ConversationController {
     log.info("userId :{}", userId);
     log.info("requestId :{}", requestId);
 
-    CommonResponse data =
-        CommonResponse.builder()
-            .message("Everything is good, please check the log")
-            .requestId(requestId)
-            .data(null)
-            .build();
-    return Mono.just(ResponseEntity.ok(data));
-  }
-
-  @GetMapping("/test")
-  public Mono<Conversation> test() {
-    return conversationRepository.findDirectConversationBetweenUsers("test1", "test2");
+    // TODO: implement this method
+    return Mono.just(ResponseEntity.ok(null));
   }
 }
