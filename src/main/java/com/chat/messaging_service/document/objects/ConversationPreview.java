@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class ConversationPreview {
+
   @JsonProperty("last_message_content")
   private String lastMessageContent;
 

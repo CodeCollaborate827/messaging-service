@@ -6,11 +6,13 @@ spring:
       uri: mongodb://localhost:27017/messaging_service
   cloud:
     function:
-      definition: userRegistrationDownstreamConsumer
-    stream:
+      definition: userRegistrationDownstreamConsumer;newMessageDownstream
+    Stream:
       bindings:
         userRegistrationDownstreamConsumer-in-0:
           destination: topic.user.registration
+        newMessageDownstream-out-0:
+          destination: topic.message.new
       kafka:
         binder:
           brokers: localhost:9092

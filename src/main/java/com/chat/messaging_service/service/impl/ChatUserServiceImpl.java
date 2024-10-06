@@ -39,4 +39,9 @@ public class ChatUserServiceImpl implements ChatUserService {
     log.info("Saving chat user: {}", chatUser);
     return chatUserRepository.save(chatUser);
   }
+
+  @Override
+  public Mono<ChatUser> findById(String id) {
+    return chatUserRepository.findById(id);
+  }
 }

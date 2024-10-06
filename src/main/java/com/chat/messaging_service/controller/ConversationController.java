@@ -1,9 +1,11 @@
 package com.chat.messaging_service.controller;
 
+import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
 import com.chat.messaging_service.dto.request.CreateGroupConversationRequest;
 import com.chat.messaging_service.dto.request.UpdateConversationRequest;
 import com.chat.messaging_service.dto.response.CommonResponse;
+import com.chat.messaging_service.repository.ConversationRepository;
 import com.chat.messaging_service.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import reactor.core.publisher.Mono;
 public class ConversationController {
 
   private final ConversationService conversationService;
+  private final ConversationRepository conversationRepository;
 
   @GetMapping("/conversations")
   public Mono<ResponseEntity<CommonResponse>> getConversations(
@@ -44,7 +47,8 @@ public class ConversationController {
             .requestId(requestId)
             .data(null)
             .build();
-
+    // TODO: right now, nothing to do with this endpoint, but later will return the right side bar
+    // (images,links, conversation details)
     return Mono.just(ResponseEntity.ok(data));
   }
 
@@ -111,5 +115,10 @@ public class ConversationController {
             .data(null)
             .build();
     return Mono.just(ResponseEntity.ok(data));
+  }
+
+  @GetMapping("/test")
+  public Mono<Conversation> test() {
+    return conversationRepository.findDirectConversationBetweenUsers("test1", "test2");
   }
 }

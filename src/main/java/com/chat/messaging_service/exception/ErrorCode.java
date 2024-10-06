@@ -5,7 +5,8 @@ public enum ErrorCode {
   KAFKA_MESSAGE_PARSING("Error when parsing kafka message", 500),
   MESSAGING_ERROR1("User already exists", 400),
   MESSAGING_ERROR2("User not found", 404),
-  MESSAGING_ERROR3("Invalid argument, direct conversation", 500);
+  MESSAGING_ERROR3("Invalid argument, direct conversation", 500),
+  MESSAGING_ERROR4("Conversation Not Found", 404);
 
   private final String errorMessage;
   private final int httpStatus;

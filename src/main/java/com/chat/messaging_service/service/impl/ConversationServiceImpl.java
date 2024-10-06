@@ -38,14 +38,14 @@ public class ConversationServiceImpl implements ConversationService {
     log.info("Getting conversations of user: {}", userId);
     return chatUserRepository
         .findById(userId)
-        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2)))
+        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
         .flatMap(
             chatUser -> {
               List<String> conversationIds = chatUser.getConversationIds();
 
               return conversationRepository
                   .findAllIdByOrderByUpdatedAtDesc(conversationIds)
-                  .map(conversation -> convertToConversationDto(conversation, userId))
+                  .map(conversation -> convertToConversationDto(conversation, userId, requestId))
                   .collectList()
                   .map(
                       conversationList -> {
@@ -98,12 +98,35 @@ public class ConversationServiceImpl implements ConversationService {
                     createSuccessResponse("Created group chat successfully", requestId))));
   }
 
+  @Override
+  public Mono<Conversation> findDirectConversationBetweenTwoUsers(String userId1, String userId2) {
+    return conversationRepository.findDirectConversationBetweenUsers(userId1, userId2);
+  }
+
+  @Override
+  public Mono<Conversation> createNewDirectConversationBetweenTwoUsers(
+      ChatUser user1, ChatUser user2) {
+
+    Conversation directConversation = ConversationUtils.createDirectConversation(user1, user2);
+    return conversationRepository.save(directConversation);
+  }
+
+  @Override
+  public Mono<Conversation> save(Conversation conversation) {
+    return conversationRepository.save(conversation);
+  }
+
+  @Override
+  public Mono<Conversation> findById(String conversationId) {
+    return conversationRepository.findById(conversationId);
+  }
+
   private void addUserToGroupChat(ChatUser chatUser, Conversation conversation) {
     chatUser.getConversationIds().addFirst(conversation.getId());
   }
 
   private ConversationDTO convertToConversationDto(
-      Conversation conversation, String currentUserId) {
+      Conversation conversation, String currentUserId, String requestId) {
     ConversationPreview messagePreview =
         ConversationUtils.getMessagePreview(conversation, currentUserId);
     ConversationPreviewDTO conversationPreviewDTO =
@@ -111,8 +134,10 @@ public class ConversationServiceImpl implements ConversationService {
 
     return ConversationDTO.builder()
         .id(conversation.getId())
-        .conversationAvatar(ConversationUtils.getConversationAvatar(conversation, currentUserId))
-        .conversationName(ConversationUtils.constructConversationName(conversation, currentUserId))
+        .conversationAvatar(
+            ConversationUtils.getConversationAvatar(conversation, currentUserId, requestId))
+        .conversationName(
+            ConversationUtils.constructConversationName(conversation, currentUserId, requestId))
         .messagePreview(conversationPreviewDTO)
         .isSeen(ConversationUtils.checkIsSeen(conversation, currentUserId))
         .updatedAt(ConversationUtils.getUpdateAtTime(conversation))

@@ -4,7 +4,7 @@ import static com.chat.messaging_service.exception.ErrorCode.KAFKA_MESSAGE_PARSI
 
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.event.Event;
-import com.chat.messaging_service.event.UserRegistrationEvent;
+import com.chat.messaging_service.event.upstream.UserRegistrationEvent;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.service.ChatUserService;
 import com.chat.messaging_service.utils.Utils;

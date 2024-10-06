@@ -5,4 +5,6 @@ import reactor.core.publisher.Mono;
 
 public interface ChatUserService {
   Mono<ChatUser> saveNewChatUser(ChatUser chatUser);
+
+  Mono<ChatUser> findById(String id);
 }

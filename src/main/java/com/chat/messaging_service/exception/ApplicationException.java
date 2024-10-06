@@ -1,14 +1,18 @@
 package com.chat.messaging_service.exception;
 
-public class ApplicationException extends RuntimeException {
+import lombok.Data;
 
+@Data
+public class ApplicationException extends RuntimeException {
+  private String requestId;
   private ErrorCode errorCode;
 
   public ApplicationException(ErrorCode errorCode) {
     this.errorCode = errorCode;
   }
 
-  public ErrorCode getErrorCode() {
-    return errorCode;
+  public ApplicationException(ErrorCode errorCode, String requestId) {
+    this.errorCode = errorCode;
+    this.requestId = requestId;
   }
 }

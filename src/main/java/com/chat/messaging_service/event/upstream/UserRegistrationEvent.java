@@ -1,4 +1,4 @@
-package com.chat.messaging_service.event;
+package com.chat.messaging_service.event.upstream;
 
 import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;

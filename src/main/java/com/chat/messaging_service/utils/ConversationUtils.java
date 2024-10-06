@@ -2,6 +2,7 @@ package com.chat.messaging_service.utils;
 
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
+import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.document.objects.ConversationMember;
 import com.chat.messaging_service.document.objects.ConversationPreview;
 import com.chat.messaging_service.exception.ApplicationException;
@@ -11,16 +12,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConversationUtils {
-  public static String constructConversationName(Conversation conversation, String currentUserId) {
+  public static String constructConversationName(
+      Conversation conversation, String currentUserId, String requestId) {
     if (conversation.isGroupConversation()) {
       return constructGroupConversationName(conversation);
     } else {
-      return conversationDirectConversationName(conversation, currentUserId);
+      return conversationDirectConversationName(conversation, currentUserId, requestId);
     }
   }
 
   private static String conversationDirectConversationName(
-      Conversation conversation, String currentUserId) {
+      Conversation conversation, String currentUserId, String requestId) {
     // a direct conversation only has 2 members
     // return name of the other user as the name for the conversation
     List<ConversationMember> members = conversation.getMembers();
@@ -34,7 +36,7 @@ public class ConversationUtils {
     if (checkIfSelfConversation(conversation, currentUserId)) {
       return members.get(0).getDisplayName();
     }
-    throw new ApplicationException(ErrorCode.MESSAGING_ERROR3);
+    throw new ApplicationException(ErrorCode.MESSAGING_ERROR3, requestId);
   }
 
   private static String constructGroupConversationName(Conversation conversation) {
@@ -106,16 +108,16 @@ public class ConversationUtils {
   }
 
   public static List<String> getConversationAvatar(
-      Conversation conversation, String currentUserId) {
+      Conversation conversation, String currentUserId, String requestId) {
     if (conversation.isGroupConversation()) {
       return getAvatarForGroupConversation(conversation);
     } else {
-      return getAvatarForDirectConversation(conversation, currentUserId);
+      return getAvatarForDirectConversation(conversation, currentUserId, requestId);
     }
   }
 
   private static List<String> getAvatarForDirectConversation(
-      Conversation conversation, String currentUserId) {
+      Conversation conversation, String currentUserId, String requestId) {
     // return the other member's avatar as the avatar of the conversation
     List<String> avatarList = new ArrayList<>();
     List<ConversationMember> members = conversation.getMembers();
@@ -133,7 +135,7 @@ public class ConversationUtils {
       return avatarList;
     }
 
-    throw new ApplicationException(ErrorCode.MESSAGING_ERROR3);
+    throw new ApplicationException(ErrorCode.MESSAGING_ERROR3, requestId);
   }
 
   private static boolean checkIfSelfConversation(Conversation conversation, String userId) {
@@ -156,5 +158,44 @@ public class ConversationUtils {
       }
     }
     return avatarList;
+  }
+
+  public static void addMessageToConversation(
+      Conversation conversation, ConversationMessage message) {
+    // update conversation preview (last message)
+    ConversationPreview conversationPreview =
+        ConversationPreview.builder()
+            .lastMessageSender(message.getSenderId())
+            .lastMessageContent(message.getContent())
+            .lastMessageTime(message.getCreatedAt())
+            .build();
+    conversation.setConversationPreview(conversationPreview);
+
+    // update conversation's current message no
+    long newCurrentMessageNo = conversation.getCurrentMessageNo() + 1L;
+    conversation.setCurrentMessageNo(newCurrentMessageNo);
+
+    // update conversation updated at
+    conversation.setUpdatedAt(message.getCreatedAt());
+  }
+
+  public static Conversation createDirectConversation(ChatUser user1, ChatUser user2) {
+
+    List<ConversationMember> members = new ArrayList<>();
+    members.add(convertToConversationMember(user1));
+    members.add(convertToConversationMember(user2));
+
+    Conversation conversation =
+        Conversation.builder().isGroupConversation(false).members(members).build();
+
+    return conversation;
+  }
+
+  private static ConversationMember convertToConversationMember(ChatUser user) {
+    return ConversationMember.builder()
+        .id(user.getId())
+        .avatar(user.getAvatar())
+        .displayName(user.getDisplayName())
+        .build();
   }
 }
