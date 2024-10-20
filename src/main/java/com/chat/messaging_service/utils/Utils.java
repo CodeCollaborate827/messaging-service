@@ -27,6 +27,7 @@ public class Utils {
         .build();
   }
 
+
   public static CommonResponse createSuccessResponse(String message, String requestId) {
     return CommonResponse.builder().message(message).requestId(requestId).build();
   }

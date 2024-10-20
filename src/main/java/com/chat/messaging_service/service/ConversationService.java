@@ -2,6 +2,7 @@ package com.chat.messaging_service.service;
 
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
+import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
 import com.chat.messaging_service.dto.request.CreateGroupConversationRequest;
 import com.chat.messaging_service.dto.response.CommonResponse;
 import org.springframework.http.ResponseEntity;
@@ -22,4 +23,9 @@ public interface ConversationService {
   Mono<Conversation> save(Conversation conversation);
 
   Mono<Conversation> findById(String conversationId);
+
+  Mono<ResponseEntity<CommonResponse>> getMessageOfConversation(String conversationId, String userId, String requestId, Long fromMessageNo, Long toMessageNo);
+
+  Mono<ResponseEntity<CommonResponse>> addMemberToConversation(String conversationId, String userId, String requestId, AddConversationMemberRequest addConversationMemberRequest);
+
 }

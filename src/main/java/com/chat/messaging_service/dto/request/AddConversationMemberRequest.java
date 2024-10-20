@@ -3,4 +3,6 @@ package com.chat.messaging_service.dto.request;
 import lombok.Data;
 
 @Data
-public class AddConversationMemberRequest {}
+public class AddConversationMemberRequest {
+    private String memberId;
+}

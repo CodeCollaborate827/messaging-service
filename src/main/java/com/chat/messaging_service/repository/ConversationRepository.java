@@ -1,12 +1,16 @@
 package com.chat.messaging_service.repository;
 
 import com.chat.messaging_service.document.Conversation;
-import java.util.List;
+import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
+import com.chat.messaging_service.dto.response.CommonResponse;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Repository
 public interface ConversationRepository extends ReactiveCrudRepository<Conversation, String> {
@@ -18,4 +22,6 @@ public interface ConversationRepository extends ReactiveCrudRepository<Conversat
   @Query(
       "{ 'isGroupConversation' : false, 'members' : { $size: 2, $all: [ { $elemMatch: { 'id': ?0 } }, { $elemMatch: { 'id': ?1 } } ] } }")
   Mono<Conversation> findDirectConversationBetweenUsers(String userId1, String userId2);
+
+
 }

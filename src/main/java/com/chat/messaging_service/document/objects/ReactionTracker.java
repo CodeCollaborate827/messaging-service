@@ -1,16 +1,17 @@
 package com.chat.messaging_service.document.objects;
 
 import com.chat.messaging_service.document.ConversationMessage;
+import lombok.Data;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
-import lombok.Data;
 
 @Data
 public class ReactionTracker {
-  private Map<ConversationMessage.ReactionType, Integer> reactionCount;
+  private Map<ConversationMessage.ReactionType, Integer> reactions;
 
   public ReactionTracker() {
-    this.reactionCount = new LinkedHashMap<>();
+    this.reactions = new LinkedHashMap<>();
     //      this.reactionCount.put(ReactionType.LIKE, 0);
     //      this.reactionCount.put(ReactionType.LOVE, 0);
     //      this.reactionCount.put(ReactionType.HAHA, 0);

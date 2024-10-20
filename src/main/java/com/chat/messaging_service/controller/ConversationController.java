@@ -4,7 +4,6 @@ import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
 import com.chat.messaging_service.dto.request.CreateGroupConversationRequest;
 import com.chat.messaging_service.dto.request.UpdateConversationRequest;
 import com.chat.messaging_service.dto.response.CommonResponse;
-import com.chat.messaging_service.repository.ConversationRepository;
 import com.chat.messaging_service.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +17,9 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ConversationController {
 
+  //TODO: refactor, the userid should be the first argument when calling the service layer
+
   private final ConversationService conversationService;
-  private final ConversationRepository conversationRepository;
 
   @GetMapping("/conversations")
   public Mono<ResponseEntity<CommonResponse>> getConversations(
@@ -82,7 +82,7 @@ public class ConversationController {
       @RequestBody AddConversationMemberRequest addConversationMemberRequest) {
     // TODO: implement this method
 
-    return Mono.just(ResponseEntity.ok(null));
+    return conversationService.addMemberToConversation(conversationId, userId, requestId, addConversationMemberRequest);
   }
 
   @GetMapping("/conversations/{conversationId}/messages")
@@ -90,14 +90,14 @@ public class ConversationController {
       @RequestHeader String userId,
       @RequestHeader String requestId,
       @PathVariable String conversationId,
-      @RequestParam(required = false) Integer fromMessageNo,
-      @RequestParam(required = false) Integer toMessageNo,
-      @RequestParam(required = false) Integer lastMessages) {
+      @RequestParam(required = false) Long fromMessageNo,
+      @RequestParam(required = false) Long toMessageNo
+  ) {
 
     log.info("userId :{}", userId);
     log.info("requestId :{}", requestId);
 
-    // TODO: implement this method
-    return Mono.just(ResponseEntity.ok(null));
+    return conversationService.getMessageOfConversation(
+        conversationId, userId, requestId, fromMessageNo, toMessageNo);
   }
 }

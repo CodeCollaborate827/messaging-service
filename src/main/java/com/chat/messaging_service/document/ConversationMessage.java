@@ -1,8 +1,6 @@
 package com.chat.messaging_service.document;
 
 import com.chat.messaging_service.document.objects.ReactionTracker;
-import java.time.OffsetDateTime;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +9,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Document(collection = "message")
 @Data
@@ -29,6 +30,7 @@ public class ConversationMessage {
   @Field("conversation_id")
   private String conversationId;
 
+  // TODO: this should be a ref or something, because later you need to fetch the repliedMessage along with the message.
   @Field("replied_message_id")
   private String repliedMessageId;
 

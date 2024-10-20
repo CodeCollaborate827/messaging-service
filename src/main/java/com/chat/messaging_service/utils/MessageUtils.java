@@ -4,6 +4,7 @@ import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.dto.request.SendMessageToConversationRequest;
 import com.chat.messaging_service.dto.request.SendMessageToUserRequest;
+import com.chat.messaging_service.dto.response.ConversationMessageDTO;
 
 public class MessageUtils {
   public static ConversationMessage createNewMessage(
@@ -32,5 +33,17 @@ public class MessageUtils {
         .repliedMessageId(sendMessageRequest.getRepliedMessageId())
         .content(sendMessageRequest.getContent())
         .build();
+  }
+
+  public static ConversationMessageDTO convertToconversationMessageDTO(ConversationMessage conversationMessage) {
+    return ConversationMessageDTO.builder()
+            .messageId(conversationMessage.getId())
+            .senderId(conversationMessage.getSenderId())
+            .repliedMessageId(conversationMessage.getRepliedMessageId())
+            .messageNo(conversationMessage.getMessageNo())
+            .content(conversationMessage.getContent())
+            .createdAt(conversationMessage.getCreatedAt())
+            .reactionTracker(conversationMessage.getReactionTracker())
+            .build();
   }
 }

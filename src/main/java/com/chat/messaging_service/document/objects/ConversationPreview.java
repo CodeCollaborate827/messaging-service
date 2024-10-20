@@ -1,11 +1,12 @@
 package com.chat.messaging_service.document.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,11 +15,20 @@ import lombok.NoArgsConstructor;
 public class ConversationPreview {
 
   @JsonProperty("last_message_content")
-  private String lastMessageContent;
+  private String previewContent;
 
   @JsonProperty("last_message_time")
-  private OffsetDateTime lastMessageTime;
+  private OffsetDateTime lastUpdated;
 
-  @JsonProperty("last_message_sender")
-  private String lastMessageSender;
+  @JsonProperty("preview_type")
+  private PreviewType previewType;
+
+//  @JsonProperty("last_message_sender")
+//  private String lastMessageSender;
+
+  public enum PreviewType {
+    USER_ADDED,
+    NEW_MESSAGE,
+    CONVERSATION_CREATED
+  }
 }
