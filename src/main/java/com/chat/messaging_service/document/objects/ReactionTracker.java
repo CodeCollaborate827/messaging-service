@@ -1,10 +1,9 @@
 package com.chat.messaging_service.document.objects;
 
 import com.chat.messaging_service.document.ConversationMessage;
-import lombok.Data;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.Data;
 
 @Data
 public class ReactionTracker {

@@ -1,6 +1,5 @@
 package com.chat.messaging_service.event.downstream;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +15,7 @@ public class NewMessageEvent {
   private String repliedMessageId;
   private String conversationId;
   private String messageContent;
-  private OffsetDateTime messageCreatedAt;
+  private Long messageCreatedAt;
   private List<String> conversationMemberIds;
+  private String senderId;
 }

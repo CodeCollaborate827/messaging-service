@@ -8,8 +8,10 @@ import reactor.core.publisher.Flux;
 
 @Repository
 public interface MessageRepository extends ReactiveCrudRepository<ConversationMessage, String> {
-    Flux<ConversationMessage> findAllByConversationIdAndMessageNoGreaterThanEqual(String conversationId, long start);
+  Flux<ConversationMessage> findAllByConversationIdAndMessageNoGreaterThanEqual(
+      String conversationId, long start);
 
-    @Query("{ 'conversationId': ?0, 'messageNo': { $gte: ?1, $lte: ?2 } }")
-    Flux<ConversationMessage> findAllByConversationIdAndMessageNoBetweenInclusive(String conversationId, long start, long end);
+  @Query("{ 'conversationId': ?0, 'messageNo': { $gte: ?1, $lte: ?2 } }")
+  Flux<ConversationMessage> findAllByConversationIdAndMessageNoBetweenInclusive(
+      String conversationId, long start, long end);
 }

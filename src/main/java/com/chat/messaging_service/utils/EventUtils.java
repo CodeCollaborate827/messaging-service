@@ -13,9 +13,10 @@ public class EventUtils {
     List<String> list = conversation.getMembers().stream().map(u -> u.getId()).toList();
     NewMessageEvent newMessageEvent =
         NewMessageEvent.builder()
+            .senderId(message.getSenderId())
             .messageContent(message.getContent())
             .messageId(message.getId())
-            .messageCreatedAt(message.getCreatedAt())
+            .messageCreatedAt(message.getCreatedAt().toEpochSecond())
             .repliedMessageId(message.getRepliedMessageId())
             .conversationId(conversation.getId())
             .conversationMemberIds(list)

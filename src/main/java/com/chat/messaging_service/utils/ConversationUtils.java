@@ -1,5 +1,7 @@
 package com.chat.messaging_service.utils;
 
+import static com.chat.messaging_service.document.objects.ConversationPreview.*;
+
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -13,8 +15,6 @@ import com.chat.messaging_service.exception.ErrorCode;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.chat.messaging_service.document.objects.ConversationPreview.*;
 
 public class ConversationUtils {
   public static String constructConversationName(
@@ -91,8 +91,6 @@ public class ConversationUtils {
     return conversation.getUpdatedAt();
   }
 
-
-
   public static List<String> getConversationAvatar(
       Conversation conversation, String currentUserId, String requestId) {
     if (conversation.isGroupConversation()) {
@@ -151,7 +149,7 @@ public class ConversationUtils {
     // update conversation preview (last message)
     ConversationPreview conversationPreview =
         builder()
-//            .lastMessageSender(message.getSenderId())
+            //            .lastMessageSender(message.getSenderId())
             .previewContent(message.getContent())
             .lastUpdated(message.getCreatedAt())
             .build();
@@ -177,54 +175,58 @@ public class ConversationUtils {
 
     Conversation conversation =
         Conversation.builder()
-                .seenStatusTracker(seenStatusTracker)
-                .isGroupConversation(false)
-                .members(members).build();
+            .seenStatusTracker(seenStatusTracker)
+            .isGroupConversation(false)
+            .members(members)
+            .build();
 
-    ConversationPreview conversationPreview = ConversationUtils.createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
+    ConversationPreview conversationPreview =
+        ConversationUtils.createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
     conversation.setConversationPreview(conversationPreview);
 
     return conversation;
   }
+
   public static Conversation createGroupConversation(
-          List<ChatUser> chatUsers, String conversationName) {
+      List<ChatUser> chatUsers, String conversationName) {
     // create a group conversation for those chat users
     List<ConversationMember> conversationMembers =
-            chatUsers.stream()
-                    .map(
-                            u ->
-                                    ConversationMember.builder()
-                                            .id(u.getId())
-                                            .displayName(u.getDisplayName())
-                                            .avatar(u.getAvatar())
-                                            .build())
-                    .toList();
+        chatUsers.stream()
+            .map(
+                u ->
+                    ConversationMember.builder()
+                        .id(u.getId())
+                        .displayName(u.getDisplayName())
+                        .avatar(u.getAvatar())
+                        .build())
+            .toList();
     List<String> memberIds = chatUsers.stream().map(u -> u.getId()).toList();
     SeenStatusTracker seenStatusTracker = new SeenStatusTracker();
     seenStatusTracker.init(memberIds);
 
-    Conversation conversation = Conversation.builder()
+    Conversation conversation =
+        Conversation.builder()
             .isGroupConversation(true)
             .groupConversationName(conversationName)
             .members(conversationMembers)
             .build();
-    ConversationPreview conversationPreview = createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
+    ConversationPreview conversationPreview =
+        createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
     conversation.setConversationPreview(conversationPreview);
     return conversation;
   }
 
-
-
-  public static ConversationWithMessagesDTO convertToConversationWithMessageDTO(Conversation conversation, List<ConversationMessageDTO> conversationMessageDTOs) {
-    return ConversationWithMessagesDTO
-            .builder()
-            .conversationId(conversation.getId())
-            .conversationCurrentMessageNo(conversation.getCurrentMessageNo())
-            .seenStatusTracker(conversation.getSeenStatusTracker())
-            .members(conversation.getMembers())
-            .messages(conversationMessageDTOs)
-            .build();
+  public static ConversationWithMessagesDTO convertToConversationWithMessageDTO(
+      Conversation conversation, List<ConversationMessageDTO> conversationMessageDTOs) {
+    return ConversationWithMessagesDTO.builder()
+        .conversationId(conversation.getId())
+        .conversationCurrentMessageNo(conversation.getCurrentMessageNo())
+        .seenStatusTracker(conversation.getSeenStatusTracker())
+        .members(conversation.getMembers())
+        .messages(conversationMessageDTOs)
+        .build();
   }
+
   public static ConversationMember convertToConversationMember(ChatUser user) {
     return ConversationMember.builder()
         .id(user.getId())
@@ -233,22 +235,26 @@ public class ConversationUtils {
         .build();
   }
 
-  public static ConversationPreview createConversationPreview(Conversation conversation, PreviewType type, ConversationMessage lastMessage) {
+  public static ConversationPreview createConversationPreview(
+      Conversation conversation, PreviewType type, ConversationMessage lastMessage) {
     ConversationPreview preview = null;
     if (type == PreviewType.CONVERSATION_CREATED) {
-       preview = builder()
-               .previewContent("Conversation created") //TODO: this should be a constant
-               .lastUpdated(conversation.getCreatedAt())
-               .previewType(type)
-               .build();
+      preview =
+          builder()
+              .previewContent("Conversation created") // TODO: this should be a constant
+              .lastUpdated(conversation.getCreatedAt())
+              .previewType(type)
+              .build();
     } else if (type == PreviewType.USER_ADDED) {
-      preview = builder()
-              .previewContent("User added") //TODO: this should be a constant
+      preview =
+          builder()
+              .previewContent("User added") // TODO: this should be a constant
               .lastUpdated(conversation.getUpdatedAt())
               .previewType(type)
               .build();
     } else if (type == PreviewType.NEW_MESSAGE) {
-      preview = builder()
+      preview =
+          builder()
               .previewContent(lastMessage.getContent())
               .lastUpdated(lastMessage.getCreatedAt())
               .previewType(type)
@@ -258,7 +264,8 @@ public class ConversationUtils {
     return preview;
   }
 
-  public static ConversationPreview createConversationPreview(Conversation conversation, PreviewType type) {
+  public static ConversationPreview createConversationPreview(
+      Conversation conversation, PreviewType type) {
     return createConversationPreview(conversation, type, null);
   }
 }

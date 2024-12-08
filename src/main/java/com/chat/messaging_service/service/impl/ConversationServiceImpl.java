@@ -1,5 +1,8 @@
 package com.chat.messaging_service.service.impl;
 
+import static com.chat.messaging_service.document.objects.ConversationPreview.*;
+import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
+
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -21,17 +24,13 @@ import com.chat.messaging_service.service.ConversationService;
 import com.chat.messaging_service.utils.ConversationUtils;
 import com.chat.messaging_service.utils.MessageUtils;
 import com.chat.messaging_service.utils.Utils;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
-
-import static com.chat.messaging_service.document.objects.ConversationPreview.*;
-import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -96,7 +95,7 @@ public class ConversationServiceImpl implements ConversationService {
               // save the conversation and update its id for each chat user's conversation list
               return conversationRepository
                   .save(conversation)
-                      //TODO: send kafka message
+                  // TODO: send kafka message
                   .map(
                       savedConversation -> {
                         // update the conversation id to each chat user's conversation list
@@ -105,10 +104,8 @@ public class ConversationServiceImpl implements ConversationService {
                       })
                   .flatMap(list -> chatUserRepository.saveAll(list).collectList());
             })
-        .then(
-            Mono.just(
-                    createSuccessResponse("Created group chat successfully", requestId)))
-            .map(ResponseEntity::ok);
+        .then(Mono.just(createSuccessResponse("Created group chat successfully", requestId)))
+        .map(ResponseEntity::ok);
   }
 
   @Override
@@ -122,9 +119,9 @@ public class ConversationServiceImpl implements ConversationService {
 
     Conversation directConversation = ConversationUtils.createDirectConversation(user1, user2);
 
-      //TODO: send kafka message
+    // TODO: send kafka message
     return conversationRepository.save(directConversation);
-//            .doOnNext()
+    //            .doOnNext()
   }
 
   @Override
@@ -137,103 +134,128 @@ public class ConversationServiceImpl implements ConversationService {
     return conversationRepository.findById(conversationId);
   }
 
-    @Override
-    public Mono<ResponseEntity<CommonResponse>> getMessageOfConversation(String conversationId,
-                                                                         String userId,
-                                                                         String requestId,
-                                                                         Long fromMessageNo,
-                                                                         Long toMessageNo
-    ) {
-        return conversationRepository.findById(conversationId)
-                .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR4, requestId)))
-                .zipWith(chatUserRepository.findById(userId))
-                .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
-                .flatMap(tuple -> {
-                    Conversation conversation = tuple.getT1();
-                    ChatUser chatUser = tuple.getT2();
+  @Override
+  public Mono<ResponseEntity<CommonResponse>> getMessageOfConversation(
+      String conversationId,
+      String userId,
+      String requestId,
+      Long fromMessageNo,
+      Long toMessageNo) {
+    return conversationRepository
+        .findById(conversationId)
+        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR4, requestId)))
+        .zipWith(chatUserRepository.findById(userId))
+        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
+        .flatMap(
+            tuple -> {
+              Conversation conversation = tuple.getT1();
+              ChatUser chatUser = tuple.getT2();
 
-                    if (!checkUserInConversation(chatUser, conversation)) {
-                        return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
-                    }
+              if (!checkUserInConversation(chatUser, conversation)) {
+                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
+              }
 
-                    Flux<ConversationMessage> messageFlux = null;
+              Flux<ConversationMessage> messageFlux = null;
 
-                    Long from = fromMessageNo;
-                    Long to = toMessageNo;
+              Long from = fromMessageNo;
+              Long to = toMessageNo;
 
-                    if (to == null) {
-                        to = conversation.getCurrentMessageNo();
-                    }
+              if (to == null) {
+                to = conversation.getCurrentMessageNo();
+              }
 
-                    if (from == null) {
-                        // it should not be negative
-                        from = Math.max((to - MAX_MESSAGE_NUM_FETCHED), 0);
-                    }
-                    //TODO: update the seen tracker for the current User
-                    messageFlux = messageRepository.findAllByConversationIdAndMessageNoBetweenInclusive(conversationId,from, to);
-                    return messageFlux
-                            .doOnNext(msg -> log.info("Message from database {}",msg))
-                            .collectList()
-                            .map(list -> createConversationWithMessagesDTO(conversation, list))
-                            .map(conversationWithMsgDto -> Utils.createSuccessResponse("Get conversation messages successfully", requestId, conversationWithMsgDto));
-                })
-                .map(ResponseEntity::ok);
-    }
+              if (from == null) {
+                // it should not be negative
+                from = Math.max((to - MAX_MESSAGE_NUM_FETCHED), 0);
+              }
+              // TODO: update the seen tracker for the current User
+              messageFlux =
+                  messageRepository.findAllByConversationIdAndMessageNoBetweenInclusive(
+                      conversationId, from, to);
+              return messageFlux
+                  .doOnNext(msg -> log.info("Message from database {}", msg))
+                  .collectList()
+                  .map(list -> createConversationWithMessagesDTO(conversation, list))
+                  .map(
+                      conversationWithMsgDto ->
+                          Utils.createSuccessResponse(
+                              "Get conversation messages successfully",
+                              requestId,
+                              conversationWithMsgDto));
+            })
+        .map(ResponseEntity::ok);
+  }
 
-    @Override
-    public Mono<ResponseEntity<CommonResponse>> addMemberToConversation(String conversationId, String userId, String requestId, AddConversationMemberRequest addConversationMemberRequest) {
-       // TODO: refactor findConversationId, and findChatUserByID in service layer
-        // check if the chat user and the conversation exist
-        return conversationRepository.findById(conversationId)
-                .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR4, requestId)))
-                .zipWith(chatUserRepository.findById(userId))
-                .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
-                .flatMap(tuple -> {
-                    Conversation conversation = tuple.getT1();
-                    ChatUser currentUser = tuple.getT2();
+  @Override
+  public Mono<ResponseEntity<CommonResponse>> addMemberToConversation(
+      String conversationId,
+      String userId,
+      String requestId,
+      AddConversationMemberRequest addConversationMemberRequest) {
+    // TODO: refactor findConversationId, and findChatUserByID in service layer
+    // check if the chat user and the conversation exist
+    return conversationRepository
+        .findById(conversationId)
+        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR4, requestId)))
+        .zipWith(chatUserRepository.findById(userId))
+        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
+        .flatMap(
+            tuple -> {
+              Conversation conversation = tuple.getT1();
+              ChatUser currentUser = tuple.getT2();
 
-                    if (!conversation.isGroupConversation()) {
-                        return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR6));
+              if (!conversation.isGroupConversation()) {
+                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR6));
+              }
 
-                    }
+              if (!checkUserInConversation(currentUser, conversation)) {
+                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
+              }
 
-                    if (!checkUserInConversation(currentUser, conversation)) {
-                        return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
-                    }
+              // check if the chat user who will be added to conversation exists
+              return chatUserRepository
+                  .findById(addConversationMemberRequest.getMemberId())
+                  .switchIfEmpty(
+                      Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
+                  .flatMap(
+                      chatUser -> {
+                        addMemberToConversation(chatUser, conversation);
+                        return conversationRepository.save(conversation);
+                      })
+                  // TODO: send kafka message
+                  .then(
+                      Mono.just(
+                          Utils.createSuccessResponse(
+                              "Add user to conversation successfully", requestId)))
+                  .map(ResponseEntity::ok);
+            });
+  }
 
-                    // check if the chat user who will be added to conversation exists
-                    return chatUserRepository.findById(addConversationMemberRequest.getMemberId())
-                            .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
-                            .flatMap(chatUser -> {
-                                addMemberToConversation(chatUser, conversation);
-                                return conversationRepository.save(conversation);
-                            })
-                            //TODO: send kafka message
-                            .then(Mono.just(Utils.createSuccessResponse("Add user to conversation successfully", requestId)))
-                            .map(ResponseEntity::ok);
-                });
-    }
+  private void addMemberToConversation(ChatUser chatUser, Conversation conversation) {
+    ConversationMember member = ConversationUtils.convertToConversationMember(chatUser);
+    conversation.getMembers().add(member);
+    conversation.getSeenStatusTracker().updateSeenMessageNo(member.getId(), 0L);
 
-    private void addMemberToConversation(ChatUser chatUser, Conversation conversation) {
-        ConversationMember member = ConversationUtils.convertToConversationMember(chatUser);
-        conversation.getMembers().add(member);
-        conversation.getSeenStatusTracker().updateSeenMessageNo(member.getId(), 0L);
+    ConversationPreview conversationPreview =
+        ConversationUtils.createConversationPreview(conversation, PreviewType.USER_ADDED);
+    conversation.setConversationPreview(conversationPreview);
+  }
 
-        ConversationPreview conversationPreview = ConversationUtils.createConversationPreview(conversation, PreviewType.USER_ADDED);
-        conversation.setConversationPreview(conversationPreview);
-    }
+  private ConversationWithMessagesDTO createConversationWithMessagesDTO(
+      Conversation conversation, List<ConversationMessage> conversationMessages) {
+    List<ConversationMessageDTO> conversationMessageDTOS =
+        conversationMessages.stream().map(MessageUtils::convertToconversationMessageDTO).toList();
 
-    private ConversationWithMessagesDTO createConversationWithMessagesDTO(Conversation conversation, List<ConversationMessage> conversationMessages) {
-        List<ConversationMessageDTO> conversationMessageDTOS = conversationMessages.stream().map(MessageUtils::convertToconversationMessageDTO).toList();
+    return ConversationUtils.convertToConversationWithMessageDTO(
+        conversation, conversationMessageDTOS);
+  }
 
-        return ConversationUtils.convertToConversationWithMessageDTO(conversation, conversationMessageDTOS);
-    }
+  private boolean checkUserInConversation(ChatUser chatUser, Conversation conversation) {
+    return conversation.getMembers().stream()
+        .anyMatch(member -> member.getId().equals(chatUser.getId()));
+  }
 
-    private boolean checkUserInConversation(ChatUser chatUser, Conversation conversation) {
-        return conversation.getMembers().stream().anyMatch(member -> member.getId().equals(chatUser.getId()));
-    }
-
-    private void addUserToGroupChat(ChatUser chatUser, Conversation conversation) {
+  private void addUserToGroupChat(ChatUser chatUser, Conversation conversation) {
     chatUser.getConversationIds().addFirst(conversation.getId());
   }
 

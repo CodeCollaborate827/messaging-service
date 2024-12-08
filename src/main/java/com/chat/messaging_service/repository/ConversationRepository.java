@@ -1,11 +1,8 @@
 package com.chat.messaging_service.repository;
 
 import com.chat.messaging_service.document.Conversation;
-import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
-import com.chat.messaging_service.dto.response.CommonResponse;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,8 +17,7 @@ public interface ConversationRepository extends ReactiveCrudRepository<Conversat
 
   // Find direct conversations between two users based on their IDs
   @Query(
-      "{ 'isGroupConversation' : false, 'members' : { $size: 2, $all: [ { $elemMatch: { 'id': ?0 } }, { $elemMatch: { 'id': ?1 } } ] } }")
+      "{ 'isGroupConversation' : false, 'members' : { $all: [ { $elemMatch: { 'id': ?0 } }, { $elemMatch: { 'id': ?1 } } ] } }")
   Mono<Conversation> findDirectConversationBetweenUsers(String userId1, String userId2);
-
 
 }

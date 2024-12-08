@@ -22,7 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import static com.chat.messaging_service.document.objects.ConversationPreview.*;
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
 import static com.chat.messaging_service.utils.ConversationUtils.addMessageToConversation;
 import static com.chat.messaging_service.utils.MessageUtils.createNewMessage;
 
@@ -51,10 +51,12 @@ public class MessagingServiceImpl implements MessagingService {
                     .findDirectConversationBetweenTwoUsers(
                         tuple2.getT1().getId(), tuple2.getT2().getId())
                     // create if not found
-                    .switchIfEmpty(conversationService.createNewDirectConversationBetweenTwoUsers(
+                    .switchIfEmpty(
+                        conversationService.createNewDirectConversationBetweenTwoUsers(
                             tuple2.getT1(), tuple2.getT2()))
                     .flatMap(
                         conversation -> {
+                            log.info("conversation: {}", conversation);
                           ConversationMessage message =
                               createNewMessage(conversation, sendMessageRequest, userId);
                           return this.sendMessageToConversation(conversation, message)
@@ -65,11 +67,10 @@ public class MessagingServiceImpl implements MessagingService {
                                           savedConversation, message))
                               .then(
                                   Mono.just(
-                                          Utils.createSuccessResponse(
-                                              "Sending message...",
-                                              requestId,
-                                              new SendMessageToUserResponse(
-                                                  conversation.getId()))))
+                                      Utils.createSuccessResponse(
+                                          "Sending message...",
+                                          requestId,
+                                          new SendMessageToUserResponse(conversation.getId()))))
                               .map(ResponseEntity::ok);
                         }));
   }
@@ -83,8 +84,10 @@ public class MessagingServiceImpl implements MessagingService {
             savedMsg -> {
               // add it to conversation as last message
               addMessageToConversation(conversation, savedMsg);
-                ConversationPreview conversationPreview = ConversationUtils.createConversationPreview(conversation, PreviewType.NEW_MESSAGE, message);
-                conversation.setConversationPreview(conversationPreview);
+              ConversationPreview conversationPreview =
+                  ConversationUtils.createConversationPreview(
+                      conversation, PreviewType.NEW_MESSAGE, message);
+              conversation.setConversationPreview(conversationPreview);
               return conversationService.save(conversation);
             });
   }

@@ -1,6 +1,5 @@
 package com.chat.messaging_service.event.upstream;
 
-import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +14,7 @@ public class UserRegistrationEvent {
   private String username;
   private String displayName;
   private String email;
-  private OffsetDateTime createdAt;
+  private Long createdAt;
   private String city;
   private String dateOfBirth;
   private Gender gender;

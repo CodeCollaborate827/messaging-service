@@ -24,8 +24,12 @@ public interface ConversationService {
 
   Mono<Conversation> findById(String conversationId);
 
-  Mono<ResponseEntity<CommonResponse>> getMessageOfConversation(String conversationId, String userId, String requestId, Long fromMessageNo, Long toMessageNo);
+  Mono<ResponseEntity<CommonResponse>> getMessageOfConversation(
+      String conversationId, String userId, String requestId, Long fromMessageNo, Long toMessageNo);
 
-  Mono<ResponseEntity<CommonResponse>> addMemberToConversation(String conversationId, String userId, String requestId, AddConversationMemberRequest addConversationMemberRequest);
-
+  Mono<ResponseEntity<CommonResponse>> addMemberToConversation(
+      String conversationId,
+      String userId,
+      String requestId,
+      AddConversationMemberRequest addConversationMemberRequest);
 }

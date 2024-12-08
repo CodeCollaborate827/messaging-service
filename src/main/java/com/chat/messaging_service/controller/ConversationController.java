@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ConversationController {
 
-  //TODO: refactor, the userid should be the first argument when calling the service layer
+  // TODO: refactor, the userid should be the first argument when calling the service layer
 
   private final ConversationService conversationService;
 
@@ -82,7 +82,8 @@ public class ConversationController {
       @RequestBody AddConversationMemberRequest addConversationMemberRequest) {
     // TODO: implement this method
 
-    return conversationService.addMemberToConversation(conversationId, userId, requestId, addConversationMemberRequest);
+    return conversationService.addMemberToConversation(
+        conversationId, userId, requestId, addConversationMemberRequest);
   }
 
   @GetMapping("/conversations/{conversationId}/messages")
@@ -91,8 +92,7 @@ public class ConversationController {
       @RequestHeader String requestId,
       @PathVariable String conversationId,
       @RequestParam(required = false) Long fromMessageNo,
-      @RequestParam(required = false) Long toMessageNo
-  ) {
+      @RequestParam(required = false) Long toMessageNo) {
 
     log.info("userId :{}", userId);
     log.info("requestId :{}", requestId);

@@ -35,15 +35,16 @@ public class MessageUtils {
         .build();
   }
 
-  public static ConversationMessageDTO convertToconversationMessageDTO(ConversationMessage conversationMessage) {
+  public static ConversationMessageDTO convertToconversationMessageDTO(
+      ConversationMessage conversationMessage) {
     return ConversationMessageDTO.builder()
-            .messageId(conversationMessage.getId())
-            .senderId(conversationMessage.getSenderId())
-            .repliedMessageId(conversationMessage.getRepliedMessageId())
-            .messageNo(conversationMessage.getMessageNo())
-            .content(conversationMessage.getContent())
-            .createdAt(conversationMessage.getCreatedAt())
-            .reactionTracker(conversationMessage.getReactionTracker())
-            .build();
+        .messageId(conversationMessage.getId())
+        .senderId(conversationMessage.getSenderId())
+        .repliedMessageId(conversationMessage.getRepliedMessageId())
+        .messageNo(conversationMessage.getMessageNo())
+        .content(conversationMessage.getContent())
+        .createdAt(conversationMessage.getCreatedAt())
+        .reactionTracker(conversationMessage.getReactionTracker())
+        .build();
   }
 }
