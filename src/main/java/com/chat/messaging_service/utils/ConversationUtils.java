@@ -1,7 +1,5 @@
 package com.chat.messaging_service.utils;
 
-import static com.chat.messaging_service.document.objects.ConversationPreview.*;
-
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -12,14 +10,22 @@ import com.chat.messaging_service.dto.response.ConversationMessageDTO;
 import com.chat.messaging_service.dto.response.ConversationWithMessagesDTO;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static com.chat.messaging_service.document.Conversation.*;
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+
+@Slf4j
 public class ConversationUtils {
   public static String constructConversationName(
       Conversation conversation, String currentUserId, String requestId) {
-    if (conversation.isGroupConversation()) {
+    if (ConversationType.GROUP.equals(conversation.getConversationType())) {
       return constructGroupConversationName(conversation);
     } else {
       return conversationDirectConversationName(conversation, currentUserId, requestId);
@@ -30,7 +36,7 @@ public class ConversationUtils {
       Conversation conversation, String currentUserId, String requestId) {
     // a direct conversation only has 2 members
     // return name of the other user as the name for the conversation
-    List<ConversationMember> members = conversation.getMembers();
+    List<ConversationMember> members = getMemberList(conversation);
     for (ConversationMember member : members) {
       boolean isOtherUser = !member.getId().equals(currentUserId);
       if (isOtherUser) {
@@ -51,7 +57,7 @@ public class ConversationUtils {
     if (groupConversationName == null) {
       StringBuilder sb = new StringBuilder();
 
-      List<ConversationMember> members = conversation.getMembers();
+      List<ConversationMember> members = getMemberList(conversation);
       for (int i = 0; i < members.size() - 1; i++) {
         sb.append(members.get(i).getDisplayName().trim());
         sb.append(", ");
@@ -93,7 +99,7 @@ public class ConversationUtils {
 
   public static List<String> getConversationAvatar(
       Conversation conversation, String currentUserId, String requestId) {
-    if (conversation.isGroupConversation()) {
+    if (ConversationType.GROUP.equals(conversation.getConversationType())) {
       return getAvatarForGroupConversation(conversation);
     } else {
       return getAvatarForDirectConversation(conversation, currentUserId, requestId);
@@ -104,7 +110,7 @@ public class ConversationUtils {
       Conversation conversation, String currentUserId, String requestId) {
     // return the other member's avatar as the avatar of the conversation
     List<String> avatarList = new ArrayList<>();
-    List<ConversationMember> members = conversation.getMembers();
+    List<ConversationMember> members = getMemberList(conversation);
 
     for (ConversationMember member : members) {
       boolean isOtherUser = !member.getId().equals(currentUserId);
@@ -123,7 +129,7 @@ public class ConversationUtils {
   }
 
   private static boolean checkIfSelfConversation(Conversation conversation, String userId) {
-    List<ConversationMember> members = conversation.getMembers();
+    List<ConversationMember> members = getMemberList(conversation);
 
     // check if all members in the conversation is the current user
     return members.stream().allMatch(u -> u.getId().equals(userId));
@@ -136,7 +142,7 @@ public class ConversationUtils {
       avatarList.add(conversation.getGroupConversationAvatar());
     } else {
       // else return list of all first 3 member avatars
-      List<ConversationMember> members = conversation.getMembers();
+      List<ConversationMember> members = getMemberList(conversation);
       for (int i = 0; i < Math.min(3, members.size()); i++) {
         avatarList.add(members.get(i).getAvatar());
       }
@@ -148,7 +154,7 @@ public class ConversationUtils {
       Conversation conversation, ConversationMessage message) {
     // update conversation preview (last message)
     ConversationPreview conversationPreview =
-        builder()
+        ConversationPreview.builder()
             //            .lastMessageSender(message.getSenderId())
             .previewContent(message.getContent())
             .lastUpdated(message.getCreatedAt())
@@ -174,10 +180,11 @@ public class ConversationUtils {
     seenStatusTracker.init(memberIds);
 
     Conversation conversation =
-        Conversation.builder()
+        builder()
+            .conversationType(ConversationType.DIRECT)
             .seenStatusTracker(seenStatusTracker)
-            .isGroupConversation(false)
-            .members(members)
+            .memberDetails(contructMemberMap(members))
+            .memberIds(memberIds)
             .build();
 
     ConversationPreview conversationPreview =
@@ -187,6 +194,29 @@ public class ConversationUtils {
     return conversation;
   }
 
+  public static Conversation createSelfConversation(ChatUser user1) {
+    List<ConversationMember> members = new ArrayList<>();
+    members.add(convertToConversationMember(user1));
+
+    SeenStatusTracker seenStatusTracker = new SeenStatusTracker();
+    seenStatusTracker.init(List.of(user1.getId()));
+
+    List<String> memberIds = List.of(user1.getId()); // only one member himself
+
+    Conversation conversation =
+            builder()
+                    .conversationType(ConversationType.SELF)
+                    .seenStatusTracker(seenStatusTracker)
+                    .memberDetails(contructMemberMap(members))
+                    .memberIds(memberIds)
+                    .build();
+
+    ConversationPreview conversationPreview =
+            ConversationUtils.createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
+    conversation.setConversationPreview(conversationPreview);
+
+    return conversation;
+  }
   public static Conversation createGroupConversation(
       List<ChatUser> chatUsers, String conversationName) {
     // create a group conversation for those chat users
@@ -205,10 +235,11 @@ public class ConversationUtils {
     seenStatusTracker.init(memberIds);
 
     Conversation conversation =
-        Conversation.builder()
-            .isGroupConversation(true)
+        builder()
+            .conversationType(ConversationType.GROUP)
             .groupConversationName(conversationName)
-            .members(conversationMembers)
+            .memberDetails(contructMemberMap(conversationMembers))
+            .memberIds(memberIds)
             .build();
     ConversationPreview conversationPreview =
         createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
@@ -222,7 +253,7 @@ public class ConversationUtils {
         .conversationId(conversation.getId())
         .conversationCurrentMessageNo(conversation.getCurrentMessageNo())
         .seenStatusTracker(conversation.getSeenStatusTracker())
-        .members(conversation.getMembers())
+        .members(getMemberList(conversation))
         .messages(conversationMessageDTOs)
         .build();
   }
@@ -240,21 +271,21 @@ public class ConversationUtils {
     ConversationPreview preview = null;
     if (type == PreviewType.CONVERSATION_CREATED) {
       preview =
-          builder()
+          ConversationPreview.builder()
               .previewContent("Conversation created") // TODO: this should be a constant
               .lastUpdated(conversation.getCreatedAt())
               .previewType(type)
               .build();
     } else if (type == PreviewType.USER_ADDED) {
       preview =
-          builder()
+          ConversationPreview.builder()
               .previewContent("User added") // TODO: this should be a constant
               .lastUpdated(conversation.getUpdatedAt())
               .previewType(type)
               .build();
     } else if (type == PreviewType.NEW_MESSAGE) {
       preview =
-          builder()
+          ConversationPreview.builder()
               .previewContent(lastMessage.getContent())
               .lastUpdated(lastMessage.getCreatedAt())
               .previewType(type)
@@ -267,5 +298,34 @@ public class ConversationUtils {
   public static ConversationPreview createConversationPreview(
       Conversation conversation, PreviewType type) {
     return createConversationPreview(conversation, type, null);
+  }
+
+  private static Map<String, ConversationMember> contructMemberMap(List<ConversationMember> members) {
+    Map<String, ConversationMember> memberMap = new HashMap<>();
+    for (ConversationMember member : members) {
+      memberMap.put(member.getId(), member);
+    }
+
+    return memberMap;
+  }
+
+
+  public static List<ConversationMember> getMemberList(Conversation conversation) {
+    return new ArrayList<>(conversation.getMemberDetails().values());
+  }
+
+  public static void addMemberToConversation(Conversation conversation, ConversationMember member) {
+    if (conversation.getMemberIds().contains(member.getId())) {
+      log.warn("User {} is already in conversation {}", member.getId(), conversation.getId());
+      return;
+    }
+
+    conversation.getMemberDetails().put(member.getId(), member);
+    conversation.getMemberIds().add(member.getId());
+  }
+
+  public static boolean checkUserInConversation(ChatUser chatUser, Conversation conversation) {
+    return conversation.getMemberIds().stream()
+            .anyMatch(memberId -> memberId.equals(chatUser.getId()));
   }
 }

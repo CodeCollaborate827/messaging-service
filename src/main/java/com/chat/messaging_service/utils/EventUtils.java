@@ -10,7 +10,7 @@ import java.util.List;
 public class EventUtils {
   public static Event buildNewMessageEvent(Conversation conversation, ConversationMessage message)
       throws JsonProcessingException {
-    List<String> list = conversation.getMembers().stream().map(u -> u.getId()).toList();
+    List<String> list = conversation.getMemberIds();
     NewMessageEvent newMessageEvent =
         NewMessageEvent.builder()
             .senderId(message.getSenderId())

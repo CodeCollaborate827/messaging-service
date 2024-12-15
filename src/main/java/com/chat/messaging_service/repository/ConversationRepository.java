@@ -17,7 +17,11 @@ public interface ConversationRepository extends ReactiveCrudRepository<Conversat
 
   // Find direct conversations between two users based on their IDs
   @Query(
-      "{ 'isGroupConversation' : false, 'members' : { $all: [ { $elemMatch: { 'id': ?0 } }, { $elemMatch: { 'id': ?1 } } ] } }")
+          "{ 'conversation_type' : 'DIRECT', 'member_ids' : { $all: [ ?0, ?1 ] } }")
   Mono<Conversation> findDirectConversationBetweenUsers(String userId1, String userId2);
+
+  @Query(
+          "{ 'conversation_type' : 'SELF', 'member_ids' : { $all: [ ?0 ] } }")
+  Mono<Conversation> findSelfConversation(String userId1);
 
 }
