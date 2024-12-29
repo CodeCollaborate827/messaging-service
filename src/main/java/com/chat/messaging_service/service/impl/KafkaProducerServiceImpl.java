@@ -1,7 +1,6 @@
 package com.chat.messaging_service.service.impl;
 
 import com.chat.messaging_service.config.ProducerBindingConfig;
-import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.enums.MessageReaction;
 import com.chat.messaging_service.event.Event;
@@ -17,7 +16,7 @@ import reactor.core.publisher.Sinks;
 
 @Slf4j
 @Service
-public class KafkaProducerServiceImpl implements KafkaProducerService {g
+public class KafkaProducerServiceImpl implements KafkaProducerService {
 
   @Override
   public void sendMessageMentionedNotificationEventToKafka(ConversationMessage message, String mentionedMemberId) {
