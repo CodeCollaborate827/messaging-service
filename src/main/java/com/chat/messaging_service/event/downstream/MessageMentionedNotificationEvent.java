@@ -9,8 +9,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageMentionedEvent {
-  private String senderId;
+// this event will be processed by Notification manager to create notification for member mentioned
+// in the message
+// MessageMentionedNotificationEvent is not part of Message events
+public class MessageMentionedNotificationEvent {
+  private String messageSenderId;
+  private String mentionedMemberId;
   private String messageId;
   private String conversationId;
   private Long createdAt;

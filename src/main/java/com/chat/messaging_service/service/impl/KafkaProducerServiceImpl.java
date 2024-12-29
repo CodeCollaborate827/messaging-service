@@ -3,7 +3,9 @@ package com.chat.messaging_service.service.impl;
 import com.chat.messaging_service.config.ProducerBindingConfig;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
+import com.chat.messaging_service.enums.MessageReaction;
 import com.chat.messaging_service.event.Event;
+import com.chat.messaging_service.event.downstream.MessageEvent;
 import com.chat.messaging_service.service.KafkaProducerService;
 import com.chat.messaging_service.utils.EventUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,23 +17,44 @@ import reactor.core.publisher.Sinks;
 
 @Slf4j
 @Service
-public class KafkaProducerServiceImpl implements KafkaProducerService {
+public class KafkaProducerServiceImpl implements KafkaProducerService {g
+
   @Override
-  public void sendNewMessageEventToKafka(Conversation conversation, ConversationMessage message) {
+  public void sendMessageMentionedNotificationEventToKafka(ConversationMessage message, String mentionedMemberId) {
     try {
-      Event newMessageEvent = EventUtils.buildNewMessageEvent(conversation, message);
-      Message<Event> kafkaMessage = MessageBuilder.withPayload(newMessageEvent).build();
-
-      Sinks.EmitResult emitResult =
-          ProducerBindingConfig.newMessageDownstreamSink.tryEmitNext(kafkaMessage);
-
-      if (emitResult.isFailure()) {
-        log.error("Failed to emit new registry event: {}", emitResult);
-      } else {
-        log.info("Event emitted successfully");
-      }
+      Event messageMentionedEvent = EventUtils.buildNotificationEventFoMessageMention(message, mentionedMemberId);
+      tryEmitEvent(messageMentionedEvent, ProducerBindingConfig.messageMentionedDownstreamSink);
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      log.error(e.getMessage());
+    }
+  }
+
+  @Override
+  public void sendMessageReactedNotificationEventToKafka(String reactionSenderId, ConversationMessage message, MessageReaction reaction) {
+    try {
+      Event messageReactedNotificationEvent = EventUtils.buildNotificationEventFoMessageReacted(reactionSenderId, message, reaction);
+      tryEmitEvent(messageReactedNotificationEvent, ProducerBindingConfig.messageReactedDownstreamSink);
+    } catch (JsonProcessingException e) {
+      log.error(e.getMessage());
+    }
+  }
+
+  @Override
+  public void sendMessageEvent(MessageEvent messageEvent) {
+
+  }
+
+
+  private void tryEmitEvent(Event event, Sinks.Many<Message<Event>> sink) {
+    Message<Event> kafkaMessage = MessageBuilder.withPayload(event).build();
+
+    Sinks.EmitResult emitResult = sink.tryEmitNext(kafkaMessage);
+
+    if (emitResult.isFailure()) {
+      //TODO: add more detail log message here
+      log.error("Failed to emit new registry event: {}", emitResult);
+    } else {
+      log.info("Event emitted successfully");
     }
   }
 }

@@ -42,8 +42,6 @@ public class MessagingController {
       @RequestHeader String requestId,
       @RequestBody ReactMessageRequest reactMessageRequest) {
 
-    // TODO: implement this method
-
-    return Mono.just(ResponseEntity.ok(null));
+    return messagingService.reactMessage(reactMessageRequest, userId, requestId);
   }
 }

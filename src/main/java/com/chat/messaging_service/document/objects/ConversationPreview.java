@@ -1,7 +1,6 @@
 package com.chat.messaging_service.document.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +16,7 @@ public class ConversationPreview {
   private String previewContent;
 
   @JsonProperty("last_message_time")
-  private OffsetDateTime lastUpdated;
+  private long lastUpdated;
 
   @JsonProperty("preview_type")
   private PreviewType previewType;

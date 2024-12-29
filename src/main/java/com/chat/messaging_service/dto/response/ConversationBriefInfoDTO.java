@@ -1,7 +1,6 @@
 package com.chat.messaging_service.dto.response;
 
 import com.chat.messaging_service.document.objects.ConversationPreview;
-import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,12 +17,12 @@ public class ConversationBriefInfoDTO {
   private List<String> conversationAvatar;
   private ConversationPreviewDTO messagePreview;
   private boolean isSeen;
-  private OffsetDateTime updatedAt;
+  private long updatedAt;
 
   @Data
   public static class ConversationPreviewDTO {
     private String previewContent;
-    private OffsetDateTime lastUpdated;
+    private long lastUpdated;
     private ConversationPreview.PreviewType previewType;
 
     public ConversationPreviewDTO(ConversationPreview conversationPreview) {

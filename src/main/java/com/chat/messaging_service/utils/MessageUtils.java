@@ -17,6 +17,7 @@ public class MessageUtils {
         .conversationId(conversationId)
         .repliedMessageId(sendMessageRequest.getRepliedMessageId())
         .content(sendMessageRequest.getContent())
+        .mentionedMemberIds(sendMessageRequest.getMentionedMemberIds())
         .build();
   }
 
@@ -32,6 +33,7 @@ public class MessageUtils {
         .conversationId(conversationId)
         .repliedMessageId(sendMessageRequest.getRepliedMessageId())
         .content(sendMessageRequest.getContent())
+        .mentionedMemberIds(sendMessageRequest.getMentionedMemberIds())
         .build();
   }
 
