@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder
 // this event will be processed by Notification manager to create notification for user whose
 // message is reacted by other members
-// MessageReactedNotificationEvent is not part of Message events
-public class MessageReactedNotificationEvent {
+// MessageReactedNotificationTriggerEvent is not part of Message events
+public class MessageReactedNotificationTriggerEvent {
   private String messageSenderId;
   private String reactionSenderId;
   private String messageId;

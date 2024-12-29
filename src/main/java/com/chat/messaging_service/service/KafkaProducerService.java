@@ -6,11 +6,11 @@ import com.chat.messaging_service.event.downstream.MessageEvent;
 
 public interface KafkaProducerService {
   // for sending to notification manager for creating notification
-  void sendMessageMentionedNotificationEventToKafka(
+  void sendNotificationTriggerEventForMessageMentioned(
       ConversationMessage message, String mentionedMemberId);
 
   // for sending to notification manager for creating notification
-  void sendMessageReactedNotificationEventToKafka(
+  void sendNotificationTriggerEventForMessageReaction(
       String reactionSenderId, ConversationMessage message, MessageReaction reaction);
 
   // for sending to realtime service for realtime update

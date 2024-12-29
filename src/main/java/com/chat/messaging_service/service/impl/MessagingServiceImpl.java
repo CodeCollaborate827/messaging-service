@@ -271,7 +271,7 @@ public class MessagingServiceImpl implements MessagingService {
             conversation.getId());
       } else {
         // send kafka message to create notification for that user
-        kafkaProducerService.sendMessageMentionedNotificationEventToKafka(message, memberId);
+        kafkaProducerService.sendNotificationTriggerEventForMessageMentioned(message, memberId);
       }
     }
   }
@@ -281,7 +281,7 @@ public class MessagingServiceImpl implements MessagingService {
     // no notification if user reacts to his/her own message
     if (reactionSenderId.equals(message.getSenderId())) return;
 
-    kafkaProducerService.sendMessageReactedNotificationEventToKafka(
+    kafkaProducerService.sendNotificationTriggerEventForMessageReaction(
         reactionSenderId, message, reaction);
   }
 }

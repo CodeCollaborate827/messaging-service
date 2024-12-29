@@ -6,17 +6,17 @@ spring:
       uri: mongodb://localhost:27017/messaging_service
   cloud:
     function:
-      definition: userRegistrationDownstreamConsumer;newMessageDownstream; messageMentionedDownstream; messageReactedDownstream
+      definition: userRegistrationDownstreamConsumer;messageEventDownstream; messageMentionedNotificationDownstream; messageReactedNotificationDownstream
     Stream:
       bindings:
         userRegistrationDownstreamConsumer-in-0:
           destination: topic.user.registration
-        newMessageDownstream-out-0:
+        messageEventDownstream-out-0:
           destination: topic.message.events
-        messageMentionedDownstream-out-0:
-          destination: topic.message.mentioned
-        messageReactedDownstream-out-0:
-          destination: topic.message.reacted
+        messageMentionedNotificationDownstream-out-0:
+          destination: topic.notification.trigger.message.mentioned
+        messageReactedNotificationDownstream-out-0:
+          destination: topic.notification.trigger.message.reacted
       kafka:
         binder:
           brokers: localhost:9092

@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 // this event will be processed by Notification manager to create notification for member mentioned
 // in the message
-// MessageMentionedNotificationEvent is not part of Message events
-public class MessageMentionedNotificationEvent {
+// MessageMentionedNotificationTriggerEvent is not part of Message events
+public class MessageMentionedNotificationTriggerEvent {
   private String messageSenderId;
   private String mentionedMemberId;
   private String messageId;

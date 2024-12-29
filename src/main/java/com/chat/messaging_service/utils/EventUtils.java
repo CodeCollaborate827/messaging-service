@@ -5,8 +5,8 @@ import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.enums.MessageReaction;
 import com.chat.messaging_service.event.Event;
 import com.chat.messaging_service.event.downstream.MessageEvent;
-import com.chat.messaging_service.event.downstream.MessageMentionedNotificationEvent;
-import com.chat.messaging_service.event.downstream.MessageReactedNotificationEvent;
+import com.chat.messaging_service.event.downstream.MessageMentionedNotificationTriggerEvent;
+import com.chat.messaging_service.event.downstream.MessageReactedNotificationTriggerEvent;
 import com.chat.messaging_service.event.downstream.message.MessageReactionEventData;
 import com.chat.messaging_service.event.downstream.message.NewMessageEventData;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -66,9 +66,9 @@ public class EventUtils {
 
   public static Event buildNotificationEventFoMessageMention(
       ConversationMessage message, String mentionedMemberId) throws JsonProcessingException {
-    // create MessageMentionedNotificationEvent
-    MessageMentionedNotificationEvent messageMentionedEventData =
-        MessageMentionedNotificationEvent.builder()
+    // create MessageMentionedNotificationTriggerEvent
+    MessageMentionedNotificationTriggerEvent messageMentionedEventData =
+        MessageMentionedNotificationTriggerEvent.builder()
             .messageId(message.getId())
             .conversationId(message.getConversationId())
             .messageSenderId(message.getSenderId())
@@ -89,9 +89,9 @@ public class EventUtils {
   public static Event buildNotificationEventFoMessageReacted(
       String reactionSenderId, ConversationMessage message, MessageReaction reaction)
       throws JsonProcessingException {
-    // create MessageMentionedNotificationEvent
-    MessageReactedNotificationEvent messageReactedNotificationEvent =
-        MessageReactedNotificationEvent.builder()
+    // create MessageMentionedNotificationTriggerEvent
+    MessageReactedNotificationTriggerEvent messageReactedNotificationTriggerEvent =
+        MessageReactedNotificationTriggerEvent.builder()
             .messageId(message.getId())
             .conversationId(message.getConversationId())
             .reactionSenderId(reactionSenderId)
@@ -101,11 +101,11 @@ public class EventUtils {
             .createdAt(Instant.now().getEpochSecond())
             .build();
 
-    String payload64 = Utils.encodeBase64(messageReactedNotificationEvent);
+    String payload64 = Utils.encodeBase64(messageReactedNotificationTriggerEvent);
 
     // create kafka message
     return Event.builder()
-        .type(messageReactedNotificationEvent.getClass().toString())
+        .type(messageReactedNotificationTriggerEvent.getClass().toString())
         .payloadBase64(payload64)
         .build();
   }
