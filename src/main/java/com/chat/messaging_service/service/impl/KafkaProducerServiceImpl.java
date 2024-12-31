@@ -4,6 +4,7 @@ import com.chat.messaging_service.config.ProducerBindingConfig;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.event.Event;
+import com.chat.messaging_service.event.downstream.conversation.ConversationEvent;
 import com.chat.messaging_service.service.KafkaProducerService;
 import com.chat.messaging_service.utils.EventUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,17 +22,31 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
     try {
       Event newMessageEvent = EventUtils.buildNewMessageEvent(conversation, message);
       Message<Event> kafkaMessage = MessageBuilder.withPayload(newMessageEvent).build();
-
-      Sinks.EmitResult emitResult =
-          ProducerBindingConfig.newMessageDownstreamSink.tryEmitNext(kafkaMessage);
-
-      if (emitResult.isFailure()) {
-        log.error("Failed to emit new registry event: {}", emitResult);
-      } else {
-        log.info("Event emitted successfully");
-      }
+      emitEvent(ProducerBindingConfig.newMessageDownstreamSink, kafkaMessage);
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void sendNewConversationEventToKafka(
+      ConversationEvent.ConversationEventType eventType, Conversation savedConversation) {
+    try {
+      Event newConversationEvent =
+          EventUtils.buildNewConversationEvent(eventType, savedConversation);
+      Message<Event> eventMessage = MessageBuilder.withPayload(newConversationEvent).build();
+      emitEvent(ProducerBindingConfig.conversationEventDownstreamSink, eventMessage);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void emitEvent(Sinks.Many<Message<Event>> sink, Message<Event> message) {
+    Sinks.EmitResult emitResult = sink.tryEmitNext(message);
+    if (emitResult.isFailure()) {
+      log.error("Failed to emit new registry event: {}", emitResult);
+    } else {
+      log.info("Event emitted successfully");
     }
   }
 }

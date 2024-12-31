@@ -17,4 +17,12 @@ public class ProducerBindingConfig {
   public Supplier<Flux<Message<Event>>> newMessageDownstream() {
     return newMessageDownstreamSink::asFlux;
   }
+
+  public static final Sinks.Many<Message<Event>> conversationEventDownstreamSink =
+      Sinks.many().unicast().onBackpressureBuffer();
+
+  @Bean("conversationEventDownstream")
+  public Supplier<Flux<Message<Event>>> conversationEventDownstream() {
+    return conversationEventDownstreamSink::asFlux;
+  }
 }

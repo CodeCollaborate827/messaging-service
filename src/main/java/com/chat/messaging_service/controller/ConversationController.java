@@ -1,6 +1,6 @@
 package com.chat.messaging_service.controller;
 
-import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
+import com.chat.messaging_service.dto.request.ConversationMemberRequest;
 import com.chat.messaging_service.dto.request.CreateGroupConversationRequest;
 import com.chat.messaging_service.dto.request.UpdateConversationRequest;
 import com.chat.messaging_service.dto.response.CommonResponse;
@@ -8,6 +8,7 @@ import com.chat.messaging_service.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -63,15 +64,24 @@ public class ConversationController {
         createConversationRequest, userId, requestId);
   }
 
-  @PutMapping("/conversations/{conversationId}")
-  public Mono<ResponseEntity<CommonResponse>> updateConversation(
+  @PutMapping("/conversations/{conversationId}/metadata")
+  public Mono<ResponseEntity<CommonResponse>> updateConversationMetaData(
       @RequestHeader String userId,
       @RequestHeader String requestId,
       @PathVariable String conversationId,
       @RequestBody UpdateConversationRequest updateConversationRequest) {
+    return conversationService.updateConversationMetaData(
+        updateConversationRequest, conversationId, userId, requestId);
+  }
 
-    // TODO: implement this method
-    return Mono.just(ResponseEntity.ok(null));
+  @PutMapping("/conversations/{conversationId}/groupImage")
+  public Mono<ResponseEntity<CommonResponse>> updateConversationImage(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @PathVariable String conversationId,
+      @RequestPart("groupImage") Mono<FilePart> groupImageFilePart) {
+    return conversationService.updateGroupImage(
+        userId, requestId, conversationId, groupImageFilePart);
   }
 
   @PutMapping("/conversations/{conversationId}/add-member")
@@ -79,11 +89,19 @@ public class ConversationController {
       @RequestHeader String userId,
       @RequestHeader String requestId,
       @PathVariable String conversationId,
-      @RequestBody AddConversationMemberRequest addConversationMemberRequest) {
-    // TODO: implement this method
-
+      @RequestBody ConversationMemberRequest conversationMemberRequest) {
     return conversationService.addMemberToConversation(
-        conversationId, userId, requestId, addConversationMemberRequest);
+        userId, requestId, conversationId, conversationMemberRequest);
+  }
+
+  @PutMapping("conversation/{conversationId}/remove-member")
+  public Mono<ResponseEntity<CommonResponse>> removeMemberFromConversation(
+      @RequestHeader String userId,
+      @RequestHeader String requestId,
+      @PathVariable String conversationId,
+      @RequestBody ConversationMemberRequest conversationMemberRequest) {
+    return conversationService.removeMemberFromConversation(
+        userId, requestId, conversationId, conversationMemberRequest);
   }
 
   @GetMapping("/conversations/{conversationId}/messages")

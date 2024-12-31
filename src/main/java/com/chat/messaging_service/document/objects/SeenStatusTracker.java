@@ -20,6 +20,10 @@ public class SeenStatusTracker {
     map.put(userId, messageNo);
   }
 
+  public void removeSeenMessageNo(String userId) {
+    map.remove(userId);
+  }
+
   public void init(List<String> memberId) {
     memberId.forEach(id -> map.put(id, 0L));
   }

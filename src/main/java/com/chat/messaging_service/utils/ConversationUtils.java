@@ -1,5 +1,8 @@
 package com.chat.messaging_service.utils;
 
+import static com.chat.messaging_service.document.Conversation.*;
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -10,16 +13,12 @@ import com.chat.messaging_service.dto.response.ConversationMessageDTO;
 import com.chat.messaging_service.dto.response.ConversationWithMessagesDTO;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.exception.ErrorCode;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.chat.messaging_service.document.Conversation.*;
-import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConversationUtils {
@@ -204,19 +203,20 @@ public class ConversationUtils {
     List<String> memberIds = List.of(user1.getId()); // only one member himself
 
     Conversation conversation =
-            builder()
-                    .conversationType(ConversationType.SELF)
-                    .seenStatusTracker(seenStatusTracker)
-                    .memberDetails(contructMemberMap(members))
-                    .memberIds(memberIds)
-                    .build();
+        builder()
+            .conversationType(ConversationType.SELF)
+            .seenStatusTracker(seenStatusTracker)
+            .memberDetails(contructMemberMap(members))
+            .memberIds(memberIds)
+            .build();
 
     ConversationPreview conversationPreview =
-            ConversationUtils.createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
+        ConversationUtils.createConversationPreview(conversation, PreviewType.CONVERSATION_CREATED);
     conversation.setConversationPreview(conversationPreview);
 
     return conversation;
   }
+
   public static Conversation createGroupConversation(
       List<ChatUser> chatUsers, String conversationName) {
     // create a group conversation for those chat users
@@ -300,7 +300,8 @@ public class ConversationUtils {
     return createConversationPreview(conversation, type, null);
   }
 
-  private static Map<String, ConversationMember> contructMemberMap(List<ConversationMember> members) {
+  private static Map<String, ConversationMember> contructMemberMap(
+      List<ConversationMember> members) {
     Map<String, ConversationMember> memberMap = new HashMap<>();
     for (ConversationMember member : members) {
       memberMap.put(member.getId(), member);
@@ -309,23 +310,23 @@ public class ConversationUtils {
     return memberMap;
   }
 
-
   public static List<ConversationMember> getMemberList(Conversation conversation) {
     return new ArrayList<>(conversation.getMemberDetails().values());
   }
 
   public static void addMemberToConversation(Conversation conversation, ConversationMember member) {
-    if (conversation.getMemberIds().contains(member.getId())) {
-      log.warn("User {} is already in conversation {}", member.getId(), conversation.getId());
-      return;
-    }
-
     conversation.getMemberDetails().put(member.getId(), member);
     conversation.getMemberIds().add(member.getId());
   }
 
   public static boolean checkUserInConversation(ChatUser chatUser, Conversation conversation) {
     return conversation.getMemberIds().stream()
-            .anyMatch(memberId -> memberId.equals(chatUser.getId()));
+        .anyMatch(memberId -> memberId.equals(chatUser.getId()));
+  }
+
+  public static void removeMemberToConversation(
+      Conversation conversation, ConversationMember member) {
+    conversation.getMemberIds().remove(member.getId());
+    conversation.getMemberDetails().remove(member.getId());
   }
 }

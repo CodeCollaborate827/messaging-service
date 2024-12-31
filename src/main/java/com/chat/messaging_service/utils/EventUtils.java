@@ -3,7 +3,8 @@ package com.chat.messaging_service.utils;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.event.Event;
-import com.chat.messaging_service.event.downstream.NewMessageEvent;
+import com.chat.messaging_service.event.downstream.conversation.ConversationEvent;
+import com.chat.messaging_service.event.downstream.message.NewMessageEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 
@@ -22,11 +23,27 @@ public class EventUtils {
             .conversationMemberIds(list)
             .build();
 
-    String payloadBase64 = Utils.encodeBase64(newMessageEvent);
+    return constructEvent(newMessageEvent);
+  }
 
-    return Event.builder()
-        .type(newMessageEvent.getClass().toString())
-        .payloadBase64(payloadBase64)
-        .build();
+  public static Event buildNewConversationEvent(
+      ConversationEvent.ConversationEventType eventType, Conversation savedConversation)
+      throws JsonProcessingException {
+    ConversationEvent event =
+        ConversationEvent.builder()
+            .conversationEventType(eventType)
+            .conversationId(savedConversation.getId())
+            .conversationMemberIds(savedConversation.getMemberIds())
+            .timestamp(System.currentTimeMillis())
+            // TODO: remove and add the necessary data to the event
+            .data(savedConversation)
+            .build();
+
+    return constructEvent(event);
+  }
+
+  private static Event constructEvent(Object event) throws JsonProcessingException {
+    String payloadBase64 = Utils.encodeBase64(event);
+    return Event.builder().type(event.getClass().toString()).payloadBase64(payloadBase64).build();
   }
 }

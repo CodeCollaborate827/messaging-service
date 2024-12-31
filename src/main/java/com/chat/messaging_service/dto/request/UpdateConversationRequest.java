@@ -1,3 +1,8 @@
 package com.chat.messaging_service.dto.request;
 
-public class UpdateConversationRequest {}
+import lombok.Data;
+
+@Data
+public class UpdateConversationRequest {
+  private String conversationName;
+}
