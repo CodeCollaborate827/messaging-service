@@ -3,7 +3,6 @@ package com.chat.messaging_service.service.impl;
 import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
 import static com.chat.messaging_service.utils.ConversationUtils.addMessageToConversation;
 import static com.chat.messaging_service.utils.MessageUtils.createNewMessage;
-
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -170,7 +169,7 @@ public class MessagingServiceImpl implements MessagingService {
               boolean messageInConversation =
                   conversation.getId().equals(message.getConversationId());
               if (!messageInConversation) {
-                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR7, requestId));
+                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR9, requestId));
               }
               return Mono.just(tuple2);
             })

@@ -1,37 +1,44 @@
 package com.chat.messaging_service.service.impl;
 
-import static com.chat.messaging_service.document.Conversation.ConversationType;
-import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
-import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
-
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.document.objects.ConversationMember;
 import com.chat.messaging_service.document.objects.ConversationPreview;
-import com.chat.messaging_service.dto.request.AddConversationMemberRequest;
+import com.chat.messaging_service.dto.request.ConversationMemberRequest;
 import com.chat.messaging_service.dto.request.CreateGroupConversationRequest;
-import com.chat.messaging_service.dto.response.CommonResponse;
-import com.chat.messaging_service.dto.response.ConversationBriefInfoDTO;
+import com.chat.messaging_service.dto.request.UpdateConversationRequest;
+import com.chat.messaging_service.dto.response.*;
 import com.chat.messaging_service.dto.response.ConversationBriefInfoDTO.ConversationPreviewDTO;
-import com.chat.messaging_service.dto.response.ConversationMessageDTO;
-import com.chat.messaging_service.dto.response.ConversationWithMessagesDTO;
+import com.chat.messaging_service.enums.ConversationType;
+import com.chat.messaging_service.event.downstream.ConversationEvent;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.exception.ErrorCode;
 import com.chat.messaging_service.repository.ChatUserRepository;
 import com.chat.messaging_service.repository.ConversationRepository;
 import com.chat.messaging_service.repository.MessageRepository;
 import com.chat.messaging_service.service.ConversationService;
+import com.chat.messaging_service.service.KafkaProducerService;
+import com.chat.messaging_service.service.MediaService;
 import com.chat.messaging_service.utils.ConversationUtils;
 import com.chat.messaging_service.utils.MessageUtils;
 import com.chat.messaging_service.utils.Utils;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
+
+import java.util.List;
+import java.util.function.Function;
+
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -41,8 +48,10 @@ public class ConversationServiceImpl implements ConversationService {
   private final ChatUserRepository chatUserRepository;
   private final ConversationRepository conversationRepository;
   private final MessageRepository messageRepository;
-
   private static final int MAX_MESSAGE_NUM_FETCHED = 20;
+  private final KafkaProducerService kafkaProducerService;
+  private final MediaService mediaService;
+  private final ObjectMapper objectMapper;
 
   @Override
   public Mono<ResponseEntity<CommonResponse>> getAllConversationsOfUser(
@@ -77,7 +86,6 @@ public class ConversationServiceImpl implements ConversationService {
       CreateGroupConversationRequest createConversationRequest, String userId, String requestId) {
     log.info("Creating group conversation, request id: {}", requestId);
     List<String> memberIds = createConversationRequest.getMemberIds();
-    // make sure the current user who creates the group chat will be included in the conversation
     boolean containsCurrentUsrId = memberIds.stream().anyMatch(id -> id.equals(userId));
     if (!containsCurrentUsrId) {
       memberIds.add(userId);
@@ -92,13 +100,15 @@ public class ConversationServiceImpl implements ConversationService {
               Conversation conversation =
                   ConversationUtils.createGroupConversation(
                       chatUserList, createConversationRequest.getConversationName());
-              // save the conversation and update its id for each chat user's conversation list
               return conversationRepository
                   .save(conversation)
-                  // TODO: send kafka message
+                  .doOnNext(
+                      savedConversation ->
+                          kafkaProducerService.sendNewConversationEventToKafka(
+                              ConversationEvent.ConversationEventType.CONVERSATION_NEW,
+                              savedConversation))
                   .map(
                       savedConversation -> {
-                        // update the conversation id to each chat user's conversation list
                         chatUserList.forEach(u -> addUserToGroupChat(u, conversation));
                         return chatUserList;
                       })
@@ -127,9 +137,12 @@ public class ConversationServiceImpl implements ConversationService {
       conversation = ConversationUtils.createDirectConversation(user1, user2);
     }
 
-    // TODO: send kafka message
-    return conversationRepository.save(conversation);
-    //            .doOnNext()
+    return conversationRepository
+        .save(conversation)
+        .doOnNext(
+            savedConversation ->
+                kafkaProducerService.sendNewConversationEventToKafka(
+                    ConversationEvent.ConversationEventType.CONVERSATION_NEW, savedConversation));
   }
 
   @Override
@@ -149,11 +162,7 @@ public class ConversationServiceImpl implements ConversationService {
       String requestId,
       Long fromMessageNo,
       Long toMessageNo) {
-    return conversationRepository
-        .findById(conversationId)
-        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR4, requestId)))
-        .zipWith(chatUserRepository.findById(userId))
-        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
+    return validateConversationAndUser(conversationId, userId, requestId)
         .flatMap(
             tuple -> {
               Conversation conversation = tuple.getT1();
@@ -173,10 +182,9 @@ public class ConversationServiceImpl implements ConversationService {
               }
 
               if (from == null) {
-                // it should not be negative
                 from = Math.max((to - MAX_MESSAGE_NUM_FETCHED), 0);
               }
-              // TODO: update the seen tracker for the current User
+
               messageFlux =
                   messageRepository.findAllByConversationIdAndMessageNoBetweenInclusive(
                       conversationId, from, to);
@@ -196,41 +204,29 @@ public class ConversationServiceImpl implements ConversationService {
 
   @Override
   public Mono<ResponseEntity<CommonResponse>> addMemberToConversation(
-      String conversationId,
       String userId,
       String requestId,
-      AddConversationMemberRequest addConversationMemberRequest) {
-    // TODO: refactor findConversationId, and findChatUserByID in service layer
-    // check if the chat user and the conversation exist
-    return conversationRepository
-        .findById(conversationId)
-        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR4, requestId)))
-        .zipWith(chatUserRepository.findById(userId))
-        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
+      String conversationId,
+      ConversationMemberRequest conversationMemberRequest) {
+    return validateConversationAndUser(conversationId, userId, requestId)
+        .flatMap(tuple -> validateGroupConversationAndMembership(tuple.getT1(), tuple.getT2()))
         .flatMap(
             tuple -> {
               Conversation conversation = tuple.getT1();
-              ChatUser currentUser = tuple.getT2();
-
-              if (ConversationType.GROUP.equals(conversation.getConversationType())) {
-                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR6));
-              }
-
-              if (!ConversationUtils.checkUserInConversation(currentUser, conversation)) {
-                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
-              }
-
-              // check if the chat user who will be added to conversation exists
               return chatUserRepository
-                  .findById(addConversationMemberRequest.getMemberId())
+                  .findById(conversationMemberRequest.getMemberId())
                   .switchIfEmpty(
                       Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)))
                   .flatMap(
-                      chatUser -> {
-                        addMemberToConversation(chatUser, conversation);
-                        return conversationRepository.save(conversation);
-                      })
-                  // TODO: send kafka message
+                      chatUser ->
+                          addMemberToConversation(chatUser, conversation)
+                              .then(conversationRepository.save(conversation)))
+                  .doOnNext(
+                      savedConversation ->
+                          kafkaProducerService.sendNewConversationEventToKafka(
+                              ConversationEvent.ConversationEventType
+                                  .CONVERSATION_GROUP_MEMBER_ADDED,
+                              savedConversation))
                   .then(
                       Mono.just(
                           Utils.createSuccessResponse(
@@ -239,14 +235,121 @@ public class ConversationServiceImpl implements ConversationService {
             });
   }
 
-  private void addMemberToConversation(ChatUser chatUser, Conversation conversation) {
+  @Override
+  public Mono<ResponseEntity<CommonResponse>> removeMemberFromConversation(
+      String userId,
+      String requestId,
+      String conversationId,
+      ConversationMemberRequest conversationMemberRequest) {
+    return validateConversationAndUser(conversationId, userId, requestId)
+        .flatMap(tuple -> validateGroupConversationAndMembership(tuple.getT1(), tuple.getT2()))
+        .flatMap(
+            tuple -> {
+              Conversation conversation = tuple.getT1();
+              return chatUserRepository
+                  .findById(conversationMemberRequest.getMemberId())
+                  .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2)))
+                  .flatMap(chatUser -> removeMember(chatUser, conversation))
+                  .then(conversationRepository.save(conversation))
+                  .doOnNext(
+                      savedConversation ->
+                          kafkaProducerService.sendNewConversationEventToKafka(
+                              ConversationEvent.ConversationEventType
+                                  .CONVERSATION_GROUP_MEMBER_REMOVED,
+                              savedConversation))
+                  .then(
+                      Mono.just(
+                          Utils.createSuccessResponse(
+                              "Remove user to conversation successfully!!", requestId)))
+                  .map(ResponseEntity::ok);
+            });
+  }
+
+  @Override
+  public Mono<ResponseEntity<CommonResponse>> updateConversationMetaData(
+      UpdateConversationRequest updateConversationRequest,
+      String conversationId,
+      String userId,
+      String requestId) {
+    return validateAndProcessGroupConversation(
+        conversationId,
+        userId,
+        requestId,
+        conversation -> {
+          conversation.setGroupConversationName(updateConversationRequest.getConversationName());
+          return conversationRepository.save(conversation);
+        },
+        ConversationEvent.ConversationEventType.CONVERSATION_NAME_UPDATED);
+  }
+
+  @Override
+  public Mono<ResponseEntity<CommonResponse>> updateGroupImage(
+      String userId, String requestId, String conversationId, Mono<FilePart> groupImageFilePart) {
+    return validateAndProcessGroupConversation(
+        conversationId,
+        userId,
+        requestId,
+        conversation ->
+            mediaService
+                .uploadImage("update_group_image", requestId, groupImageFilePart)
+                .mapNotNull(
+                    res -> objectMapper.convertValue(res, MediaResource.class).getSecureUrl())
+                .flatMap(
+                    groupImageUrl -> {
+                      conversation.setGroupConversationAvatar(groupImageUrl);
+                      return conversationRepository.save(conversation);
+                    }),
+        ConversationEvent.ConversationEventType.CONVERSATION_IMAGE_UPDATED);
+  }
+
+  private Mono<ResponseEntity<CommonResponse>> validateAndProcessGroupConversation(
+      String conversationId,
+      String userId,
+      String requestId,
+      Function<Conversation, Mono<Conversation>> processConversation,
+      ConversationEvent.ConversationEventType eventType) {
+
+    return validateConversationAndUser(conversationId, userId, requestId)
+        .flatMap(
+            tuple -> {
+              Conversation conversation = tuple.getT1();
+              ChatUser currentUser = tuple.getT2();
+
+              if (!ConversationType.GROUP.equals(conversation.getConversationType())) {
+                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR8));
+              }
+
+              if (!ConversationUtils.checkUserInConversation(currentUser, conversation)) {
+                return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
+              }
+
+              return processConversation.apply(conversation);
+            })
+        .doOnNext(
+            updatedConversation ->
+                kafkaProducerService.sendNewConversationEventToKafka(
+                    eventType, updatedConversation))
+        .then(
+            Mono.just(
+                Utils.createSuccessResponse(
+                    "Update metadata conversation successfully!!", requestId)))
+        .map(ResponseEntity::ok);
+  }
+
+  private Mono<Void> addMemberToConversation(ChatUser chatUser, Conversation conversation) {
     ConversationMember member = ConversationUtils.convertToConversationMember(chatUser);
+
+    if (conversation.getMemberIds().contains(member.getId())) {
+      return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR7));
+    }
+
     ConversationUtils.addMemberToConversation(conversation, member);
     conversation.getSeenStatusTracker().updateSeenMessageNo(member.getId(), 0L);
-
     ConversationPreview conversationPreview =
         ConversationUtils.createConversationPreview(conversation, PreviewType.USER_ADDED);
     conversation.setConversationPreview(conversationPreview);
+
+    return Mono.empty();
   }
 
   private ConversationWithMessagesDTO createConversationWithMessagesDTO(
@@ -279,5 +382,47 @@ public class ConversationServiceImpl implements ConversationService {
         .isSeen(ConversationUtils.checkIsSeen(conversation, currentUserId))
         .updatedAt(ConversationUtils.getUpdateAtTime(conversation))
         .build();
+  }
+
+  private Mono<Void> removeMember(ChatUser chatUser, Conversation conversation) {
+    ConversationMember member = ConversationUtils.convertToConversationMember(chatUser);
+    if (!conversation.getMemberIds().contains(member.getId())) {
+      return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
+    }
+
+    ConversationUtils.removeMemberToConversation(conversation, member);
+    conversation.getSeenStatusTracker().removeSeenMessageNo(member.getId());
+    return Mono.empty();
+  }
+
+  private Mono<Tuple2<Conversation, ChatUser>> validateConversationAndUser(
+      String conversationId, String userId, String requestId) {
+    return validateConversation(conversationId, requestId)
+        .zipWith(validateChatUser(userId, requestId));
+  }
+
+  private Mono<Conversation> validateConversation(String conversationId, String requestId) {
+    return conversationRepository
+        .findById(conversationId)
+        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR4, requestId)));
+  }
+
+  private Mono<ChatUser> validateChatUser(String userId, String requestId) {
+    return chatUserRepository
+        .findById(userId)
+        .switchIfEmpty(Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR2, requestId)));
+  }
+
+  private Mono<Tuple2<Conversation, ChatUser>> validateGroupConversationAndMembership(
+      Conversation conversation, ChatUser currentUser) {
+    if (!ConversationType.GROUP.equals(conversation.getConversationType())) {
+      return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR6));
+    }
+
+    if (!ConversationUtils.checkUserInConversation(currentUser, conversation)) {
+      return Mono.error(new ApplicationException(ErrorCode.MESSAGING_ERROR5));
+    }
+
+    return Mono.just(Tuples.of(conversation, currentUser));
   }
 }

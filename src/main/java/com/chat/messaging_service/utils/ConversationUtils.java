@@ -1,8 +1,5 @@
 package com.chat.messaging_service.utils;
 
-import static com.chat.messaging_service.document.Conversation.*;
-import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
-
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -11,13 +8,17 @@ import com.chat.messaging_service.document.objects.ConversationPreview;
 import com.chat.messaging_service.document.objects.SeenStatusTracker;
 import com.chat.messaging_service.dto.response.ConversationMessageDTO;
 import com.chat.messaging_service.dto.response.ConversationWithMessagesDTO;
+import com.chat.messaging_service.enums.ConversationType;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
+
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
 
 @Slf4j
 public class ConversationUtils {
@@ -177,7 +178,7 @@ public class ConversationUtils {
     List<String> memberIds = List.of(user1.getId(), user2.getId());
     seenStatusTracker.init(memberIds);
 
-    Conversation conversation =
+    Conversation conversation = Conversation.
         builder()
             .conversationType(ConversationType.DIRECT)
             .seenStatusTracker(seenStatusTracker)
@@ -201,8 +202,7 @@ public class ConversationUtils {
 
     List<String> memberIds = List.of(user1.getId()); // only one member himself
 
-    Conversation conversation =
-        builder()
+    Conversation conversation = Conversation.builder()
             .conversationType(ConversationType.SELF)
             .seenStatusTracker(seenStatusTracker)
             .memberDetails(contructMemberMap(members))
@@ -233,8 +233,7 @@ public class ConversationUtils {
     SeenStatusTracker seenStatusTracker = new SeenStatusTracker();
     seenStatusTracker.init(memberIds);
 
-    Conversation conversation =
-        builder()
+    Conversation conversation = Conversation.builder()
             .conversationType(ConversationType.GROUP)
             .groupConversationName(conversationName)
             .memberDetails(contructMemberMap(conversationMembers))
@@ -314,11 +313,6 @@ public class ConversationUtils {
   }
 
   public static void addMemberToConversation(Conversation conversation, ConversationMember member) {
-    if (conversation.getMemberIds().contains(member.getId())) {
-      log.warn("User {} is already in conversation {}", member.getId(), conversation.getId());
-      return;
-    }
-
     conversation.getMemberDetails().put(member.getId(), member);
     conversation.getMemberIds().add(member.getId());
   }
@@ -326,5 +320,11 @@ public class ConversationUtils {
   public static boolean checkUserInConversation(ChatUser chatUser, Conversation conversation) {
     return conversation.getMemberIds().stream()
         .anyMatch(memberId -> memberId.equals(chatUser.getId()));
+  }
+
+  public static void removeMemberToConversation(
+      Conversation conversation, ConversationMember member) {
+    conversation.getMemberIds().remove(member.getId());
+    conversation.getMemberDetails().remove(member.getId());
   }
 }

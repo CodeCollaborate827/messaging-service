@@ -5,11 +5,14 @@ import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.enums.MessageReaction;
 import com.chat.messaging_service.event.Event;
 import com.chat.messaging_service.event.downstream.MessageEvent;
-import com.chat.messaging_service.event.downstream.MessageMentionedNotificationTriggerEvent;
-import com.chat.messaging_service.event.downstream.MessageReactedNotificationTriggerEvent;
+import com.chat.messaging_service.event.downstream.ConversationEvent;
+import com.chat.messaging_service.event.downstream.conversation.NewConversationEventData;
+import com.chat.messaging_service.event.downstream.message.MessageMentionedNotificationTriggerEvent;
+import com.chat.messaging_service.event.downstream.message.MessageReactedNotificationTriggerEvent;
 import com.chat.messaging_service.event.downstream.message.MessageReactionEventData;
 import com.chat.messaging_service.event.downstream.message.NewMessageEventData;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -78,13 +81,9 @@ public class EventUtils {
             .createdAt(message.getCreatedAt())
             .build();
 
-    String payload64 = Utils.encodeBase64(messageMentionedEventData);
 
     // create kafka message
-    return Event.builder()
-        .type(messageMentionedEventData.getClass().toString())
-        .payloadBase64(payload64)
-        .build();
+    return constructEvent(messageMentionedEventData);
   }
 
   public static Event buildNotificationEventFoMessageReacted(
@@ -102,12 +101,39 @@ public class EventUtils {
             .createdAt(Instant.now().getEpochSecond())
             .build();
 
-    String payload64 = Utils.encodeBase64(messageReactedNotificationTriggerEvent);
-
     // create kafka message
-    return Event.builder()
-        .type(messageReactedNotificationTriggerEvent.getClass().toString())
-        .payloadBase64(payload64)
-        .build();
+    return constructEvent(messageReactedNotificationTriggerEvent);
+  }
+
+  public static Event buildNewConversationEvent(
+      ConversationEvent.ConversationEventType eventType, Conversation conversation)
+      throws JsonProcessingException {
+    NewConversationEventData newConversationEventData =
+            NewConversationEventData.builder()
+                    .conversationId(conversation.getId())
+                    .memberDetails(conversation.getMemberDetails())
+                    .conversationType(conversation.getConversationType())
+                    .groupConversationName(conversation.getGroupConversationName())
+                    .groupConversationAvatar(conversation.getGroupConversationAvatar())
+                    .createdAt(conversation.getCreatedAt())
+                    .build();
+
+
+    ConversationEvent event =
+        ConversationEvent.builder()
+            .conversationEventType(eventType)
+            .conversationId(conversation.getId())
+            .conversationMemberIds(conversation.getMemberIds())
+            .timestamp(System.currentTimeMillis())
+            // TODO: remove and add the necessary data to the event
+            .data(newConversationEventData)
+            .build();
+
+    return constructEvent(event);
+  }
+
+  private static Event constructEvent(Object event) throws JsonProcessingException {
+    String payloadBase64 = Utils.encodeBase64(event);
+    return Event.builder().type(event.getClass().toString()).payloadBase64(payloadBase64).build();
   }
 }

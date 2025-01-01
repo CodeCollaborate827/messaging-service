@@ -1,4 +1,4 @@
-package com.chat.messaging_service.event.downstream;
+package com.chat.messaging_service.event.downstream.message;
 
 import com.chat.messaging_service.enums.MessageReaction;
 import lombok.AllArgsConstructor;

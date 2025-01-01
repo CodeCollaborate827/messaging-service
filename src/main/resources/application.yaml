@@ -6,7 +6,7 @@ spring:
       uri: mongodb://localhost:27017/messaging_service
   cloud:
     function:
-      definition: userRegistrationDownstreamConsumer;messageEventDownstream; messageMentionedNotificationDownstream; messageReactedNotificationDownstream
+      definition: userRegistrationDownstreamConsumer;messageEventDownstream; messageMentionedNotificationDownstream; messageReactedNotificationDownstream; conversationEventDownstream
     Stream:
       bindings:
         userRegistrationDownstreamConsumer-in-0:
@@ -17,6 +17,8 @@ spring:
           destination: topic.notification.trigger.message.mentioned
         messageReactedNotificationDownstream-out-0:
           destination: topic.notification.trigger.message.reacted
+        conversationEventDownstream-out-0:
+          destination: topic.conversation.events
       kafka:
         binder:
           brokers: localhost:9092
@@ -30,3 +32,5 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
     instance:
       preferIpAddress: true
+media-service:
+  url: http://media-service/api/media/image
