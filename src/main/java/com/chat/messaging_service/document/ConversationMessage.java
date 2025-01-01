@@ -40,11 +40,7 @@ public class ConversationMessage {
 
   private List<String> mentionedMemberIds;
 
-  @Field("created_at")
-  @Builder.Default
-  private Long createdAt = Instant.now().getEpochSecond();
+  @Builder.Default private Long createdAt = Instant.now().getEpochSecond();
 
-  @Field("reaction_tracker")
-  @Builder.Default
-  private ReactionTracker reactionTracker = new ReactionTracker();
+  @Builder.Default private ReactionTracker reactionTracker = new ReactionTracker();
 }
