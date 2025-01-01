@@ -12,6 +12,7 @@ import com.chat.messaging_service.event.downstream.message.MessageReactedNotific
 import com.chat.messaging_service.event.downstream.message.MessageReactionEventData;
 import com.chat.messaging_service.event.downstream.message.NewMessageEventData;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -132,5 +133,22 @@ public class EventUtils {
   private static Event constructEvent(Object event) throws JsonProcessingException {
     String payloadBase64 = Utils.encodeBase64(event);
     return Event.builder().type(event.getClass().toString()).payloadBase64(payloadBase64).build();
+  }
+
+  private Object constructConversationEventData(ConversationEvent.ConversationEventType type, Conversation conversation) {
+    switch (type) {
+      case CONVERSATION_NEW:
+        return NewConversationEventData.builder()
+            .conversationId(conversation.getId())
+            .memberDetails(conversation.getMemberDetails())
+            .conversationType(conversation.getConversationType())
+            .groupConversationName(conversation.getGroupConversationName())
+            .groupConversationAvatar(conversation.getGroupConversationAvatar())
+            .createdAt(conversation.getCreatedAt())
+            .build();
+        // TODO: add more cases here
+      default:
+        return null;
+    }
   }
 }

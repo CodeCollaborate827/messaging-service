@@ -77,7 +77,6 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
   public void sendNewConversationEventToKafka(
       ConversationEvent.ConversationEventType eventType, Conversation conversation) {
     try {
-
       Event newConversationEvent = EventUtils.buildNewConversationEvent(eventType, conversation);
       Message<Event> eventMessage = MessageBuilder.withPayload(newConversationEvent).build();
       emitEvent(ProducerBindingConfig.conversationEventDownstreamSink, eventMessage);
