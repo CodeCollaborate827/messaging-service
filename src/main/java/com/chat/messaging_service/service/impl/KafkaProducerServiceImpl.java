@@ -52,7 +52,7 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
       String payload64 = Utils.encodeBase64(messageEvent);
       Event event =
           Event.builder().type(messageEvent.getClass().toString()).payloadBase64(payload64).build();
-      tryEmitEvent(event, ProducerBindingConfig.newMessageDownstreamSink);
+      tryEmitEvent(event, ProducerBindingConfig.messageEventDownstreamSink);
     } catch (JsonProcessingException e) {
       log.error(e.getMessage());
     }

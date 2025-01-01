@@ -1,6 +1,6 @@
 package com.chat.messaging_service.service.impl;
 
-import static com.chat.messaging_service.document.Conversation.*;
+import static com.chat.messaging_service.document.Conversation.ConversationType;
 import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
 import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
 
@@ -54,7 +54,6 @@ public class ConversationServiceImpl implements ConversationService {
         .flatMap(
             chatUser -> {
               List<String> conversationIds = chatUser.getConversationIds();
-
               return conversationRepository
                   .findAllIdByOrderByUpdatedAtDesc(conversationIds)
                   .map(conversation -> convertToConversationDto(conversation, userId, requestId))

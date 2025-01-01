@@ -31,7 +31,14 @@ public class ReactionTracker {
   }
 
   public void removeExistingReactionOfUser(String userId, MessageReaction reaction) {
-    getRecordsOfReactionType(reaction).removeIf(r -> r.getUserId().equals(userId));
+    List<MessageReactionRecord> recordsOfReactionType = getRecordsOfReactionType(reaction);
+    recordsOfReactionType.removeIf(r -> r.getUserId().equals(userId));
+
+    if (recordsOfReactionType.isEmpty()) {
+      reactions.remove(reaction); // remove the reaction type if no user reacted from the message
+    } else {
+      reactions.put(reaction, recordsOfReactionType);
+    }
   }
 
   public void addReactionOfUser(String userId, MessageReaction reaction) {

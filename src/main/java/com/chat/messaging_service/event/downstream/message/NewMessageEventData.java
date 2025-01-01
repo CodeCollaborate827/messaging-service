@@ -1,5 +1,6 @@
 package com.chat.messaging_service.event.downstream.message;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +17,5 @@ public class NewMessageEventData {
   private String messageContent;
   private Long messageCreatedAt;
   private String senderId;
+  private List<String> mentionedMemberIds;
 }

@@ -186,7 +186,9 @@ public class MessagingServiceImpl implements MessagingService {
 
               Tuple3<Conversation, ConversationMessage, Boolean> t3 =
                   Tuples.of(conversation, message, reacted);
-              return Mono.just(t3);
+              return messageRepository
+                  .save(message) // save message with new reaction
+                  .then(Mono.just(t3));
             })
         .doOnNext(
             tuple3 -> {

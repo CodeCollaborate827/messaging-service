@@ -30,26 +30,20 @@ public class ConsumerBindingConfig {
 
   @Bean
   public Consumer<Flux<Message<Event>>> userRegistrationDownstreamConsumer() {
-    return flux ->
-        flux.flatMap(event -> processMessage(event.getPayload()))
-            .onErrorContinue((e, object) -> log.error(e.getMessage())) // TODO: log the error
-            //                .onErrorResume(this::handleError)
-            .subscribe();
+    return flux -> flux.flatMap(event -> processMessage(event.getPayload())).subscribe();
   }
 
   private Mono<ChatUser> processMessage(Event event) {
     log.info("Processing the message: {}", event);
 
-    // increment 1.... kakfa messg counter
+    // increment 1.... kakfa message counter
     String payloadBase64 = event.getPayloadBase64();
     log.info("Payload: {}", payloadBase64);
-    try {
-      UserRegistrationEvent userRegistrationEvent = decodeUserRegistrationEvent(payloadBase64);
-      ChatUser chatUser = Utils.convertToChatUser(userRegistrationEvent);
-      return chatUserService.saveNewChatUser(chatUser);
-    } catch (IOException e) {
-      return Mono.error(new ApplicationException(KAFKA_MESSAGE_PARSING));
-    }
+    UserRegistrationEvent userRegistrationEvent = decodeUserRegistrationEvent(payloadBase64);
+    ChatUser chatUser = Utils.convertToChatUser(userRegistrationEvent);
+    return chatUserService
+        .saveNewChatUser(chatUser)
+        .doOnNext(savedUser -> log.info("User saved with id: {}", savedUser.getId()));
   }
 
   private Mono<ChatUser> handleError(Throwable e) {
@@ -59,9 +53,13 @@ public class ConsumerBindingConfig {
     // later
   }
 
-  private UserRegistrationEvent decodeUserRegistrationEvent(String base64String)
-      throws IOException {
+  private UserRegistrationEvent decodeUserRegistrationEvent(String base64String) {
     byte[] decodedBytes = Base64.getDecoder().decode(base64String.getBytes(StandardCharsets.UTF_8));
-    return objectMapper.readValue(decodedBytes, UserRegistrationEvent.class);
+    try {
+      return objectMapper.readValue(decodedBytes, UserRegistrationEvent.class);
+    } catch (IOException e) {
+      log.error("Error when decoding UserRegistrationEvent: {}", e.getMessage());
+      throw new ApplicationException(KAFKA_MESSAGE_PARSING);
+    }
   }
 }

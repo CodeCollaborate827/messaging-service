@@ -25,6 +25,7 @@ public class EventUtils {
             .messageId(message.getId())
             .messageCreatedAt(message.getCreatedAt())
             .repliedMessageId(message.getRepliedMessageId())
+            .mentionedMemberIds(message.getMentionedMemberIds())
             .build();
 
     // create message event

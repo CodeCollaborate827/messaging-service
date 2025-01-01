@@ -10,7 +10,7 @@ import reactor.core.publisher.Sinks;
 
 @Configuration
 public class ProducerBindingConfig {
-  public static final Sinks.Many<Message<Event>> newMessageDownstreamSink =
+  public static final Sinks.Many<Message<Event>> messageEventDownstreamSink =
       Sinks.many().unicast().onBackpressureBuffer();
 
   public static final Sinks.Many<Message<Event>> messageMentionedNotificationDownstreamSink =
@@ -19,17 +19,17 @@ public class ProducerBindingConfig {
   public static final Sinks.Many<Message<Event>> messageReactedNotificationDownstreamSink =
       Sinks.many().unicast().onBackpressureBuffer();
 
-  @Bean("newMessageDownstream")
+  @Bean("messageEventDownstream")
   public Supplier<Flux<Message<Event>>> messageEventDownstream() {
-    return newMessageDownstreamSink::asFlux;
+    return messageEventDownstreamSink::asFlux;
   }
 
-  @Bean("messageMentionedDownstream")
+  @Bean("messageMentionedNotificationDownstream")
   public Supplier<Flux<Message<Event>>> messageMentionedNotificationDownstream() {
     return messageMentionedNotificationDownstreamSink::asFlux;
   }
 
-  @Bean("messageReactedDownstream")
+  @Bean("messageReactedNotificationDownstream")
   public Supplier<Flux<Message<Event>>> messageReactedNotificationDownstream() {
     return messageReactedNotificationDownstreamSink::asFlux;
   }
