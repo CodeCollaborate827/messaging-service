@@ -1,5 +1,7 @@
 package com.chat.messaging_service.utils;
 
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -11,14 +13,11 @@ import com.chat.messaging_service.dto.response.ConversationWithMessagesDTO;
 import com.chat.messaging_service.enums.ConversationType;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.exception.ErrorCode;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConversationUtils {
@@ -178,8 +177,8 @@ public class ConversationUtils {
     List<String> memberIds = List.of(user1.getId(), user2.getId());
     seenStatusTracker.init(memberIds);
 
-    Conversation conversation = Conversation.
-        builder()
+    Conversation conversation =
+        Conversation.builder()
             .conversationType(ConversationType.DIRECT)
             .seenStatusTracker(seenStatusTracker)
             .memberDetails(contructMemberMap(members))
@@ -202,7 +201,8 @@ public class ConversationUtils {
 
     List<String> memberIds = List.of(user1.getId()); // only one member himself
 
-    Conversation conversation = Conversation.builder()
+    Conversation conversation =
+        Conversation.builder()
             .conversationType(ConversationType.SELF)
             .seenStatusTracker(seenStatusTracker)
             .memberDetails(contructMemberMap(members))
@@ -233,7 +233,8 @@ public class ConversationUtils {
     SeenStatusTracker seenStatusTracker = new SeenStatusTracker();
     seenStatusTracker.init(memberIds);
 
-    Conversation conversation = Conversation.builder()
+    Conversation conversation =
+        Conversation.builder()
             .conversationType(ConversationType.GROUP)
             .groupConversationName(conversationName)
             .memberDetails(contructMemberMap(conversationMembers))

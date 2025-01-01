@@ -5,8 +5,8 @@ import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.enums.MessageReaction;
 import com.chat.messaging_service.event.Event;
-import com.chat.messaging_service.event.downstream.MessageEvent;
 import com.chat.messaging_service.event.downstream.ConversationEvent;
+import com.chat.messaging_service.event.downstream.MessageEvent;
 import com.chat.messaging_service.service.KafkaProducerService;
 import com.chat.messaging_service.utils.EventUtils;
 import com.chat.messaging_service.utils.Utils;
@@ -75,11 +75,10 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
 
   @Override
   public void sendNewConversationEventToKafka(
-          ConversationEvent.ConversationEventType eventType, Conversation conversation) {
+      ConversationEvent.ConversationEventType eventType, Conversation conversation) {
     try {
 
-      Event newConversationEvent =
-          EventUtils.buildNewConversationEvent(eventType, conversation);
+      Event newConversationEvent = EventUtils.buildNewConversationEvent(eventType, conversation);
       Message<Event> eventMessage = MessageBuilder.withPayload(newConversationEvent).build();
       emitEvent(ProducerBindingConfig.conversationEventDownstreamSink, eventMessage);
     } catch (Exception e) {

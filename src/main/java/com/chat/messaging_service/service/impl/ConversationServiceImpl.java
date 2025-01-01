@@ -1,5 +1,8 @@
 package com.chat.messaging_service.service.impl;
 
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
+
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
@@ -24,6 +27,8 @@ import com.chat.messaging_service.utils.ConversationUtils;
 import com.chat.messaging_service.utils.MessageUtils;
 import com.chat.messaging_service.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +38,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
-
-import java.util.List;
-import java.util.function.Function;
-
-import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
-import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
 
 @Service
 @RequiredArgsConstructor

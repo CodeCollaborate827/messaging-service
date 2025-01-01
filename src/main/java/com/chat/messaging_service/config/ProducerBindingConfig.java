@@ -1,13 +1,12 @@
 package com.chat.messaging_service.config;
 
 import com.chat.messaging_service.event.Event;
+import java.util.function.Supplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
-
-import java.util.function.Supplier;
 
 @Configuration
 public class ProducerBindingConfig {
@@ -21,7 +20,7 @@ public class ProducerBindingConfig {
       Sinks.many().unicast().onBackpressureBuffer();
 
   public static final Sinks.Many<Message<Event>> conversationEventDownstreamSink =
-          Sinks.many().unicast().onBackpressureBuffer();
+      Sinks.many().unicast().onBackpressureBuffer();
 
   @Bean("messageEventDownstream")
   public Supplier<Flux<Message<Event>>> messageEventDownstream() {
@@ -37,7 +36,6 @@ public class ProducerBindingConfig {
   public Supplier<Flux<Message<Event>>> messageReactedNotificationDownstream() {
     return messageReactedNotificationDownstreamSink::asFlux;
   }
-
 
   @Bean("conversationEventDownstream")
   public Supplier<Flux<Message<Event>>> conversationEventDownstream() {

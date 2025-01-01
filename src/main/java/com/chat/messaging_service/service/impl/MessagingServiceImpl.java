@@ -3,6 +3,7 @@ package com.chat.messaging_service.service.impl;
 import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
 import static com.chat.messaging_service.utils.ConversationUtils.addMessageToConversation;
 import static com.chat.messaging_service.utils.MessageUtils.createNewMessage;
+
 import com.chat.messaging_service.document.ChatUser;
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;

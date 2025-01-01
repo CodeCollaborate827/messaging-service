@@ -4,16 +4,15 @@ import com.chat.messaging_service.document.objects.ConversationMember;
 import com.chat.messaging_service.document.objects.ConversationPreview;
 import com.chat.messaging_service.document.objects.SeenStatusTracker;
 import com.chat.messaging_service.enums.ConversationType;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 
 @Document(collection = "conversation")
 @Data
