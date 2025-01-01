@@ -1,5 +1,6 @@
-package com.chat.messaging_service.event.downstream;
+package com.chat.messaging_service.event.downstream.message;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,12 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageReactedEvent {
-  private String senderId;
+public class NewMessageEvent {
   private String messageId;
+  private String repliedMessageId;
   private String conversationId;
-  private Long createdAt;
   private String messageContent;
-  private String reaction;
-  private Object data;
+  private Long messageCreatedAt;
+  private List<String> conversationMemberIds;
+  private String senderId;
 }

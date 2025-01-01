@@ -1,5 +1,9 @@
 package com.chat.messaging_service.service.impl;
 
+import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
+import static com.chat.messaging_service.utils.ConversationUtils.addMessageToConversation;
+import static com.chat.messaging_service.utils.MessageUtils.createNewMessage;
+
 import com.chat.messaging_service.document.Conversation;
 import com.chat.messaging_service.document.ConversationMessage;
 import com.chat.messaging_service.document.objects.ConversationPreview;
@@ -21,10 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
-import static com.chat.messaging_service.utils.ConversationUtils.addMessageToConversation;
-import static com.chat.messaging_service.utils.MessageUtils.createNewMessage;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +56,7 @@ public class MessagingServiceImpl implements MessagingService {
                             tuple2.getT1(), tuple2.getT2()))
                     .flatMap(
                         conversation -> {
-                            log.info("conversation: {}", conversation);
+                          log.info("conversation: {}", conversation);
                           ConversationMessage message =
                               createNewMessage(conversation, sendMessageRequest, userId);
                           return this.sendMessageToConversation(conversation, message)
