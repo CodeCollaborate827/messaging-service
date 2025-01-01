@@ -1,4 +1,4 @@
-package com.chat.messaging_service.event.downstream.conversation;
+package com.chat.messaging_service.event.downstream;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

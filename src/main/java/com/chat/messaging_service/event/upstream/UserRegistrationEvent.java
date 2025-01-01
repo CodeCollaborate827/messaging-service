@@ -21,8 +21,8 @@ public class UserRegistrationEvent {
   private String avatar;
 
   public enum Gender {
-    male,
-    female,
-    other
+    MALE,
+    FEMALE,
+    OTHER
   }
 }

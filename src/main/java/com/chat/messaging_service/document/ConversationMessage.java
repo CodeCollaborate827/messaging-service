@@ -1,7 +1,8 @@
 package com.chat.messaging_service.document;
 
 import com.chat.messaging_service.document.objects.ReactionTracker;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,20 +38,9 @@ public class ConversationMessage {
   @Field private String content;
   @Field private Long messageNo;
 
-  @Field("created_at")
-  @Builder.Default
-  private OffsetDateTime createdAt = OffsetDateTime.now();
+  private List<String> mentionedMemberIds;
 
-  @Field("reaction_tracker")
-  @Builder.Default
-  private ReactionTracker reactionTracker = new ReactionTracker();
+  @Builder.Default private Long createdAt = Instant.now().getEpochSecond();
 
-  public enum ReactionType {
-    LIKE,
-    LOVE,
-    HAHA,
-    WOW,
-    SAD,
-    ANGRY
-  }
+  @Builder.Default private ReactionTracker reactionTracker = new ReactionTracker();
 }

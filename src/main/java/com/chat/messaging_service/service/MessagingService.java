@@ -1,5 +1,6 @@
 package com.chat.messaging_service.service;
 
+import com.chat.messaging_service.dto.request.ReactMessageRequest;
 import com.chat.messaging_service.dto.request.SendMessageToConversationRequest;
 import com.chat.messaging_service.dto.request.SendMessageToUserRequest;
 import com.chat.messaging_service.dto.response.CommonResponse;
@@ -12,4 +13,7 @@ public interface MessagingService {
 
   Mono<ResponseEntity<CommonResponse>> sendMessageToConversation(
       SendMessageToConversationRequest sendMessageRequest, String userId, String requestId);
+
+  Mono<ResponseEntity<CommonResponse>> reactMessage(
+      ReactMessageRequest reactMessageRequest, String userId, String requestId);
 }

@@ -1,6 +1,5 @@
 package com.chat.messaging_service.service.impl;
 
-import static com.chat.messaging_service.document.Conversation.*;
 import static com.chat.messaging_service.document.objects.ConversationPreview.PreviewType;
 import static com.chat.messaging_service.utils.Utils.createSuccessResponse;
 
@@ -14,7 +13,8 @@ import com.chat.messaging_service.dto.request.CreateGroupConversationRequest;
 import com.chat.messaging_service.dto.request.UpdateConversationRequest;
 import com.chat.messaging_service.dto.response.*;
 import com.chat.messaging_service.dto.response.ConversationBriefInfoDTO.ConversationPreviewDTO;
-import com.chat.messaging_service.event.downstream.conversation.ConversationEvent;
+import com.chat.messaging_service.enums.ConversationType;
+import com.chat.messaging_service.event.downstream.ConversationEvent;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.exception.ErrorCode;
 import com.chat.messaging_service.repository.ChatUserRepository;
@@ -62,7 +62,6 @@ public class ConversationServiceImpl implements ConversationService {
         .flatMap(
             chatUser -> {
               List<String> conversationIds = chatUser.getConversationIds();
-
               return conversationRepository
                   .findAllIdByOrderByUpdatedAtDesc(conversationIds)
                   .map(conversation -> convertToConversationDto(conversation, userId, requestId))
