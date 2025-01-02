@@ -104,51 +104,20 @@ public class EventUtils {
     return constructEvent(messageReactedNotificationTriggerEvent);
   }
 
-  public static Event buildNewConversationEvent(
-      ConversationEvent.ConversationEventType eventType, Conversation conversation)
-      throws JsonProcessingException {
-    NewConversationEventData newConversationEventData =
-        NewConversationEventData.builder()
-            .conversationId(conversation.getId())
-            .memberDetails(conversation.getMemberDetails())
-            .conversationType(conversation.getConversationType())
-            .groupConversationName(conversation.getGroupConversationName())
-            .groupConversationAvatar(conversation.getGroupConversationAvatar())
-            .createdAt(conversation.getCreatedAt())
-            .build();
-
-    ConversationEvent event =
-        ConversationEvent.builder()
-            .conversationEventType(eventType)
-            .conversationId(conversation.getId())
-            .conversationMemberIds(conversation.getMemberIds())
-            .timestamp(System.currentTimeMillis())
-            // TODO: remove and add the necessary data to the event
-            .data(newConversationEventData)
-            .build();
-
+  public static Event buildConversationEvent(
+      Conversation conversation, Object data) throws JsonProcessingException {
+    ConversationEvent event = ConversationEvent.builder()
+        .conversationEventType(ConversationEvent.ConversationEventType.CONVERSATION_NEW)
+        .conversationId(conversation.getId())
+        .conversationMemberIds(conversation.getMemberIds())
+        .timestamp(Instant.now().getEpochSecond())
+        .data(data)
+        .build();
     return constructEvent(event);
   }
 
   private static Event constructEvent(Object event) throws JsonProcessingException {
     String payloadBase64 = Utils.encodeBase64(event);
     return Event.builder().type(event.getClass().toString()).payloadBase64(payloadBase64).build();
-  }
-
-  private Object constructConversationEventData(ConversationEvent.ConversationEventType type, Conversation conversation) {
-    switch (type) {
-      case CONVERSATION_NEW:
-        return NewConversationEventData.builder()
-            .conversationId(conversation.getId())
-            .memberDetails(conversation.getMemberDetails())
-            .conversationType(conversation.getConversationType())
-            .groupConversationName(conversation.getGroupConversationName())
-            .groupConversationAvatar(conversation.getGroupConversationAvatar())
-            .createdAt(conversation.getCreatedAt())
-            .build();
-        // TODO: add more cases here
-      default:
-        return null;
-    }
   }
 }
