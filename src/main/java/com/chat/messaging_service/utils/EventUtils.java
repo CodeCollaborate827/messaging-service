@@ -6,13 +6,11 @@ import com.chat.messaging_service.enums.MessageReaction;
 import com.chat.messaging_service.event.Event;
 import com.chat.messaging_service.event.downstream.ConversationEvent;
 import com.chat.messaging_service.event.downstream.MessageEvent;
-import com.chat.messaging_service.event.downstream.conversation.NewConversationEventData;
 import com.chat.messaging_service.event.downstream.message.MessageMentionedNotificationTriggerEvent;
 import com.chat.messaging_service.event.downstream.message.MessageReactedNotificationTriggerEvent;
 import com.chat.messaging_service.event.downstream.message.MessageReactionEventData;
 import com.chat.messaging_service.event.downstream.message.NewMessageEventData;
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import java.time.Instant;
 import java.util.List;
 
@@ -104,15 +102,16 @@ public class EventUtils {
     return constructEvent(messageReactedNotificationTriggerEvent);
   }
 
-  public static Event buildConversationEvent(
-      Conversation conversation, Object data) throws JsonProcessingException {
-    ConversationEvent event = ConversationEvent.builder()
-        .conversationEventType(ConversationEvent.ConversationEventType.CONVERSATION_NEW)
-        .conversationId(conversation.getId())
-        .conversationMemberIds(conversation.getMemberIds())
-        .timestamp(Instant.now().getEpochSecond())
-        .data(data)
-        .build();
+  public static Event buildConversationEvent(Conversation conversation, Object data)
+      throws JsonProcessingException {
+    ConversationEvent event =
+        ConversationEvent.builder()
+            .conversationEventType(ConversationEvent.ConversationEventType.CONVERSATION_NEW)
+            .conversationId(conversation.getId())
+            .conversationMemberIds(conversation.getMemberIds())
+            .timestamp(Instant.now().getEpochSecond())
+            .data(data)
+            .build();
     return constructEvent(event);
   }
 

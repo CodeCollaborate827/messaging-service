@@ -18,5 +18,8 @@ public interface KafkaProducerService {
   // for sending to realtime service for realtime update
   void sendMessageEvent(MessageEvent messageEvent);
 
-  void sendNewConversationEventToKafka(Conversation conversation, ConversationEvent.ConversationEventType eventType, Object eventData);
+  void sendNewConversationEventToKafka(
+      Conversation conversation,
+      ConversationEvent.ConversationEventType eventType,
+      Object eventData);
 }

@@ -74,7 +74,10 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
   }
 
   @Override
-  public void sendNewConversationEventToKafka(Conversation conversation, ConversationEvent.ConversationEventType eventType, Object eventData) {
+  public void sendNewConversationEventToKafka(
+      Conversation conversation,
+      ConversationEvent.ConversationEventType eventType,
+      Object eventData) {
     try {
       Event event = EventUtils.buildConversationEvent(conversation, eventData);
       tryEmitEvent(event, ProducerBindingConfig.conversationEventDownstreamSink);

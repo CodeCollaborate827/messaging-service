@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public class ConversationMetaDataUpdatedData {
-    private String updatedBy;
-    private String conversationName;
-    private long timestamp;
+  private String updatedBy;
+  private String conversationName;
+  private long timestamp;
 }

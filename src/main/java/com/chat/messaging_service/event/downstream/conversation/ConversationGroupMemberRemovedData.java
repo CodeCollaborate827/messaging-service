@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public class ConversationGroupMemberRemovedData {
-    private String removedBy;
-    private String removedUserId;
-    private long timestamp;
+  private String removedBy;
+  private String removedUserId;
+  private long timestamp;
 }
