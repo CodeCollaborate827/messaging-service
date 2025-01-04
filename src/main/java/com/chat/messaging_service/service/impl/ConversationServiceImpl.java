@@ -15,6 +15,7 @@ import com.chat.messaging_service.dto.response.*;
 import com.chat.messaging_service.dto.response.ConversationBriefInfoDTO.ConversationPreviewDTO;
 import com.chat.messaging_service.enums.ConversationType;
 import com.chat.messaging_service.event.downstream.ConversationEvent;
+import com.chat.messaging_service.event.downstream.conversation.*;
 import com.chat.messaging_service.exception.ApplicationException;
 import com.chat.messaging_service.exception.ErrorCode;
 import com.chat.messaging_service.repository.ChatUserRepository;
@@ -27,6 +28,7 @@ import com.chat.messaging_service.utils.ConversationUtils;
 import com.chat.messaging_service.utils.MessageUtils;
 import com.chat.messaging_service.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
@@ -102,10 +104,22 @@ public class ConversationServiceImpl implements ConversationService {
               return conversationRepository
                   .save(conversation)
                   .doOnNext(
-                      savedConversation ->
-                          kafkaProducerService.sendNewConversationEventToKafka(
-                              ConversationEvent.ConversationEventType.CONVERSATION_NEW,
-                              savedConversation))
+                      savedConversation -> {
+                        NewConversationEventData newConversationEventData =
+                            NewConversationEventData.builder()
+                                .conversationId(savedConversation.getId())
+                                .memberDetails(savedConversation.getMemberDetails())
+                                .conversationType(savedConversation.getConversationType())
+                                .groupConversationName(savedConversation.getGroupConversationName())
+                                .groupConversationAvatar(
+                                    savedConversation.getGroupConversationAvatar())
+                                .createdAt(savedConversation.getCreatedAt())
+                                .build();
+                        kafkaProducerService.sendNewConversationEventToKafka(
+                            savedConversation,
+                            ConversationEvent.ConversationEventType.CONVERSATION_NEW,
+                            newConversationEventData);
+                      })
                   .map(
                       savedConversation -> {
                         chatUserList.forEach(u -> addUserToGroupChat(u, conversation));
@@ -139,9 +153,21 @@ public class ConversationServiceImpl implements ConversationService {
     return conversationRepository
         .save(conversation)
         .doOnNext(
-            savedConversation ->
-                kafkaProducerService.sendNewConversationEventToKafka(
-                    ConversationEvent.ConversationEventType.CONVERSATION_NEW, savedConversation));
+            savedConversation -> {
+              NewConversationEventData newConversationEventData =
+                  NewConversationEventData.builder()
+                      .conversationId(savedConversation.getId())
+                      .memberDetails(savedConversation.getMemberDetails())
+                      .conversationType(savedConversation.getConversationType())
+                      .groupConversationName(savedConversation.getGroupConversationName())
+                      .groupConversationAvatar(savedConversation.getGroupConversationAvatar())
+                      .createdAt(savedConversation.getCreatedAt())
+                      .build();
+              kafkaProducerService.sendNewConversationEventToKafka(
+                  savedConversation,
+                  ConversationEvent.ConversationEventType.CONVERSATION_NEW,
+                  newConversationEventData);
+            });
   }
 
   @Override
@@ -221,11 +247,18 @@ public class ConversationServiceImpl implements ConversationService {
                           addMemberToConversation(chatUser, conversation)
                               .then(conversationRepository.save(conversation)))
                   .doOnNext(
-                      savedConversation ->
-                          kafkaProducerService.sendNewConversationEventToKafka(
-                              ConversationEvent.ConversationEventType
-                                  .CONVERSATION_GROUP_MEMBER_ADDED,
-                              savedConversation))
+                      savedConversation -> {
+                        ConversationGroupMemberAddedData conversationGroupMemberAddedData =
+                            ConversationGroupMemberAddedData.builder()
+                                .addedBy(userId)
+                                .addedUserId(conversationMemberRequest.getMemberId())
+                                .timestamp(Instant.now().getEpochSecond())
+                                .build();
+                        kafkaProducerService.sendNewConversationEventToKafka(
+                            savedConversation,
+                            ConversationEvent.ConversationEventType.CONVERSATION_GROUP_MEMBER_ADDED,
+                            conversationGroupMemberAddedData);
+                      })
                   .then(
                       Mono.just(
                           Utils.createSuccessResponse(
@@ -251,11 +284,19 @@ public class ConversationServiceImpl implements ConversationService {
                   .flatMap(chatUser -> removeMember(chatUser, conversation))
                   .then(conversationRepository.save(conversation))
                   .doOnNext(
-                      savedConversation ->
-                          kafkaProducerService.sendNewConversationEventToKafka(
-                              ConversationEvent.ConversationEventType
-                                  .CONVERSATION_GROUP_MEMBER_REMOVED,
-                              savedConversation))
+                      savedConversation -> {
+                        ConversationGroupMemberRemovedData data =
+                            ConversationGroupMemberRemovedData.builder()
+                                .removedBy(userId)
+                                .removedUserId(conversationMemberRequest.getMemberId())
+                                .timestamp(Instant.now().getEpochSecond())
+                                .build();
+                        kafkaProducerService.sendNewConversationEventToKafka(
+                            savedConversation,
+                            ConversationEvent.ConversationEventType
+                                .CONVERSATION_GROUP_MEMBER_REMOVED,
+                            data);
+                      })
                   .then(
                       Mono.just(
                           Utils.createSuccessResponse(
@@ -325,9 +366,31 @@ public class ConversationServiceImpl implements ConversationService {
               return processConversation.apply(conversation);
             })
         .doOnNext(
-            updatedConversation ->
-                kafkaProducerService.sendNewConversationEventToKafka(
-                    eventType, updatedConversation))
+            updatedConversation -> {
+              Object data = null;
+              switch (eventType) {
+                case CONVERSATION_NAME_UPDATED:
+                  data =
+                      ConversationMetaDataUpdatedData.builder()
+                          .conversationName(updatedConversation.getGroupConversationName())
+                          .updatedBy(userId)
+                          .timestamp(Instant.now().getEpochSecond())
+                          .build();
+                  break;
+                case CONVERSATION_IMAGE_UPDATED:
+                  data =
+                      ConversationAvatarUpdatedData.builder()
+                          .avatarUrl(updatedConversation.getGroupConversationAvatar())
+                          .updatedBy(userId)
+                          .timestamp(Instant.now().getEpochSecond())
+                          .build();
+                  break;
+                default:
+                  break;
+              }
+              kafkaProducerService.sendNewConversationEventToKafka(
+                  updatedConversation, eventType, data);
+            })
         .then(
             Mono.just(
                 Utils.createSuccessResponse(

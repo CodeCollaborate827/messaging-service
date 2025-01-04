@@ -75,23 +75,14 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
 
   @Override
   public void sendNewConversationEventToKafka(
-      ConversationEvent.ConversationEventType eventType, Conversation conversation) {
+      Conversation conversation,
+      ConversationEvent.ConversationEventType eventType,
+      Object eventData) {
     try {
-
-      Event newConversationEvent = EventUtils.buildNewConversationEvent(eventType, conversation);
-      Message<Event> eventMessage = MessageBuilder.withPayload(newConversationEvent).build();
-      emitEvent(ProducerBindingConfig.conversationEventDownstreamSink, eventMessage);
+      Event event = EventUtils.buildConversationEvent(conversation, eventData);
+      tryEmitEvent(event, ProducerBindingConfig.conversationEventDownstreamSink);
     } catch (Exception e) {
       throw new RuntimeException(e);
-    }
-  }
-
-  private void emitEvent(Sinks.Many<Message<Event>> sink, Message<Event> message) {
-    Sinks.EmitResult emitResult = sink.tryEmitNext(message);
-    if (emitResult.isFailure()) {
-      log.error("Failed to emit new registry event: {}", emitResult);
-    } else {
-      log.info("Event emitted successfully");
     }
   }
 }

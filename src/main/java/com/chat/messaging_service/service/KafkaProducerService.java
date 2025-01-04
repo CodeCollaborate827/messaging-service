@@ -19,5 +19,7 @@ public interface KafkaProducerService {
   void sendMessageEvent(MessageEvent messageEvent);
 
   void sendNewConversationEventToKafka(
-      ConversationEvent.ConversationEventType eventType, Conversation savedConversation);
+      Conversation conversation,
+      ConversationEvent.ConversationEventType eventType,
+      Object eventData);
 }
